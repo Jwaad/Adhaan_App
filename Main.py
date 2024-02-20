@@ -7,40 +7,53 @@ class AdhaanApp(QWidget):
     
     def __init__(self):
         super().__init__()
-        self.window_size = (300, 200)
-        self.default_font_size = 12
+        self.window_size = (500, 400)
+        self.default_font_size = 18
+        self.default_large_font_size = 24
+        self.default_title_font_size = 30
         self.initWindow()
         self.initButtons()
 
     def initWindow(self):
-        self.setWindowTitle('Simple PyQt5 Example')
+        self.setWindowTitle('Salaat Times')
         self.setGeometry(100, 100, self.window_size[0], self.window_size[1]) # x-position, y-position, width, height
         
-
     def initButtons(self):
         # Set program to grid layout
-        layout = QVBoxLayout()
+        layout = QGridLayout()
         self.setLayout(layout)
-        
-        # Init button 1
-        button1 = QPushButton('Button 1', self)
-        button1.clicked.connect(lambda:self.onButtonPress("button1"))
-        layout.addWidget(button1, 0)
-         
-        # Init button 1
-        button2 = QPushButton('Button 2', self)
-        button2.clicked.connect(lambda:self.onButtonPress("button2"))
-        layout.addWidget(button2, 1)
-        
-        self.buttons = [button1, button2]
-        
-        # Init all button's font size
-        self.resizeButtonFonts(self.default_font_size)
 
+        # Populate list of buttons
+        self.icons = []
+        for i in range(0, 12):
+            button = QPushButton("Button {}".format(i), self)
+            button.clicked.connect(lambda checked, index=i: self.onButtonPress("Button {}".format(index)))
+            #text.setAlignment(Qt.AlignCenter)
+            layout.addWidget(button, i, 1)
+            self.icons.append(button)
+        
+        # Add the side buttons
+        wing1 = QPushButton("<", self)
+        wing1.clicked.connect(lambda checked: self.onButtonPress("Left Wing") )
+        wing1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)  # Set size policy
+        #wing1.setFixedWidth(30)  # Set fixed width
+        layout.addWidget(wing1, 0, 0, 12, 1)
 
+        wing2 = QPushButton(">", self)
+        wing2.clicked.connect(lambda checked: self.onButtonPress("Right Wing") )
+        wing2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)  # Set size policy
+        #wing2.setFixedWidth(30)  # Set fixed width
+        layout.addWidget(wing2, 0, 2, 12, 1)
+
+        
+        # Init all button's font size 
+        self.resizeButtonFonts(self.icons, self.default_font_size)
+
+    # temp
     def onButtonPress(self, Text = " "):
         print(Text)
-        
+    
+    # On resize window
     def resizeEvent(self, event):
         new_size = event.size()
         
@@ -49,18 +62,18 @@ class AdhaanApp(QWidget):
         width_increase = new_size.width() / self.window_size[1]
         
         new_font_size = int(round(self.default_font_size * width_increase, 0))
-        if height_increase < width_increase:
+        if height_increase < width_increase: 
             new_font_size = int(round(self.default_font_size * height_increase, 0))
         
         # Rescale onscreen buttons to new window size
-        self.resizeButtonFonts(new_font_size)
+        self.resizeButtonFonts(self.icons, new_font_size)
         
-        
-    def resizeButtonFonts(self, size, font = "Arial"):
+    # 
+    def resizeButtonFonts(self, buttons, size, font = "Arial"):
         # Rescale all button fonts
-        font = QFont(font, size, QFont.Bold)
-        for button in self.buttons:
-            button.setFont(font)
+        buttonFont = QFont(font, size, QFont.Bold)
+        for button in buttons:
+            button.setFont(buttonFont)
 
 def main():
     app = QApplication(sys.argv)

@@ -25,7 +25,7 @@ class AdhaanApp(QWidget):
 
         # Populate list of buttons
         self.icons = []
-        for i in range(0, 12):
+        for i in range(0, 10):
             button = QPushButton("Button {}".format(i), self)
             button.clicked.connect(lambda checked, index=i: self.onButtonPress("Button {}".format(index)))
             #text.setAlignment(Qt.AlignCenter)
@@ -37,13 +37,13 @@ class AdhaanApp(QWidget):
         wing1.clicked.connect(lambda checked: self.onButtonPress("Left Wing") )
         wing1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)  # Set size policy
         #wing1.setFixedWidth(30)  # Set fixed width
-        layout.addWidget(wing1, 0, 0, 12, 1)
+        layout.addWidget(wing1, 2, 0, 7, 1)
 
         wing2 = QPushButton(">", self)
         wing2.clicked.connect(lambda checked: self.onButtonPress("Right Wing") )
         wing2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)  # Set size policy
         #wing2.setFixedWidth(30)  # Set fixed width
-        layout.addWidget(wing2, 0, 2, 12, 1)
+        layout.addWidget(wing2, 2, 2, 7, 1)
 
         
         # Init all button's font size 

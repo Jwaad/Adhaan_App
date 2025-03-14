@@ -9,11 +9,15 @@ class AdhaanApp(QMainWindow):
         """
         Initialises the Salaat Times window, setting its size and initialising its buttons.
         """
+        # Init window
         super().__init__()
         self.window_size = (600, 760)
+        
+        # Init program fonts
         self.default_font_size = 30
         self.default_large_font_size = 55
         self.default_title_font_size = 70
+        self.default_Font = "Arial"
         
         # Init window
         self.setWindowTitle('Salaat Times')
@@ -52,14 +56,14 @@ class AdhaanApp(QMainWindow):
         
         # Current Date
         label = QLabel(datetime.datetime.now().strftime("%d/%m/%Y"), self)
-        label.setFont(QFont("Arial", self.default_font_size))
+        label.setFont(QFont(self.default_Font, self.default_font_size))
         label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(label, 1, 1, 1, maxGridCols)
         allWidgets.append(label)
         
         # Current Time
         label = QLabel(datetime.datetime.now().strftime("%H:%M:%S"), self)
-        label.setFont(QFont("Arial", self.default_large_font_size))
+        label.setFont(QFont(self.default_Font, self.default_large_font_size))
         label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(label, 2, 1, 1, maxGridCols)
         allWidgets.append(label)
@@ -67,7 +71,7 @@ class AdhaanApp(QMainWindow):
         # Time until next prayer
         hoursTilNext = divmod(self.TimeTilNext.total_seconds(), 60**2) 
         label = QLabel("Time until {}: {}h:{}m".format(self.NameOfNext, int(hoursTilNext[0]), int(hoursTilNext[1]/60)), self)
-        label.setFont(QFont("Arial", self.default_font_size))
+        label.setFont(QFont(self.default_Font, self.default_font_size))
         label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(label, 3, 1, 1, maxGridCols)
         allWidgets.append(label)
@@ -85,17 +89,17 @@ class AdhaanApp(QMainWindow):
         #Prayer times
         for time in self.PrayerTimes:
             prayerName = QLabel(time["name"], self)
-            prayerName.setFont(QFont("Arial", self.default_large_font_size))
+            prayerName.setFont(QFont(self.default_Font, self.default_large_font_size))
             prayerName.setAlignment(Qt.AlignRight)
             self.layout.addWidget(prayerName, len(allWidgets)+ 1, 1, 1, 2)
             
             colon = QLabel(":", self)
-            colon.setFont(QFont("Arial", self.default_large_font_size))
+            colon.setFont(QFont(self.default_Font, self.default_large_font_size))
             colon.setAlignment(Qt.AlignCenter)
             self.layout.addWidget(colon, len(allWidgets)+ 1, 3, 1, 1)
             
             prayerTime = QLabel(time["time"], self)
-            prayerTime.setFont(QFont("Arial", self.default_large_font_size))
+            prayerTime.setFont(QFont(self.default_Font, self.default_large_font_size))
             prayerTime.setAlignment(Qt.AlignLeft)
             self.layout.addWidget(prayerTime, len(allWidgets) + 1, 4, 1, 2)
             

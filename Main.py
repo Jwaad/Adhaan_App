@@ -46,20 +46,22 @@ class AdhaanApp(QMainWindow):
         self.MainPageButtons()
         
     def MainPageButtons(self):
+        # nRows x 5Col grid
+        maxGridCols = 5
         allWidgets = []
         
         # Current Date
         button = QLabel(datetime.datetime.now().strftime("%d/%m/%Y"), self)
         button.setFont(QFont("Arial", self.default_font_size))
         button.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(button, 1, 1, 1, 3)
+        self.layout.addWidget(button, 1, 1, 1, maxGridCols)
         allWidgets.append(button)
         
         # Current Time
         button = QLabel(datetime.datetime.now().strftime("%H:%M:%S"), self)
         button.setFont(QFont("Arial", self.default_large_font_size))
         button.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(button, 2, 1, 1, 3)
+        self.layout.addWidget(button, 2, 1, 1, maxGridCols)
         allWidgets.append(button)
         
         # Time until next prayer
@@ -67,7 +69,7 @@ class AdhaanApp(QMainWindow):
         button = QLabel("Time until {}: {}h:{}m".format(self.NameOfNext, int(hoursTilNext[0]), int(hoursTilNext[1]/60)), self)
         button.setFont(QFont("Arial", self.default_font_size))
         button.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(button, 3, 1, 1, 3)
+        self.layout.addWidget(button, 3, 1, 1, maxGridCols)
         allWidgets.append(button)
         
         # Add seperating line
@@ -77,7 +79,7 @@ class AdhaanApp(QMainWindow):
         sizePolicy.setHeightForWidth(div.sizePolicy().hasHeightForWidth())
         div.setSizePolicy(sizePolicy)
         div.setLineWidth(5)
-        self.layout.addWidget(div, 4, 1, 1, 3)
+        self.layout.addWidget(div, 4, 1, 1, maxGridCols)
         allWidgets.append(div)
         
         #Prayer times
@@ -85,17 +87,17 @@ class AdhaanApp(QMainWindow):
             prayerName = QLabel(time["name"], self)
             prayerName.setFont(QFont("Arial", self.default_large_font_size))
             prayerName.setAlignment(Qt.AlignRight)
-            self.layout.addWidget(prayerName, len(allWidgets)+ 1, 1)
+            self.layout.addWidget(prayerName, len(allWidgets)+ 1, 1, 1, 2)
             
             colon = QLabel(":", self)
             colon.setFont(QFont("Arial", self.default_large_font_size))
             colon.setAlignment(Qt.AlignCenter)
-            self.layout.addWidget(colon, len(allWidgets)+ 1, 2)
+            self.layout.addWidget(colon, len(allWidgets)+ 1, 3, 1, 1)
             
             prayerTime = QLabel(time["time"], self)
             prayerTime.setFont(QFont("Arial", self.default_large_font_size))
             prayerTime.setAlignment(Qt.AlignLeft)
-            self.layout.addWidget(prayerTime, len(allWidgets) + 1, 3)
+            self.layout.addWidget(prayerTime, len(allWidgets) + 1, 4, 1, 2)
             
             # Append to widet list in this format: [PrayerName, Colon, PrayerTime]
             allWidgets.append([prayerName, colon, prayerTime])

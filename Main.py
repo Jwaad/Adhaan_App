@@ -1,85 +1,115 @@
 import sys
+import datetime
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
-class AdhaanApp(QWidget):
-    
+class AdhaanApp(QMainWindow):
     def __init__(self):
+        """
+        Initialises the Salaat Times window, setting its size and initialising its buttons.
+        """
         super().__init__()
-        self.window_size = (500, 400)
-        self.default_font_size = 18
-        self.default_large_font_size = 24
-        self.default_title_font_size = 30
-        self.initWindow()
-        self.initButtons()
-
-    def initWindow(self):
+        self.window_size = (600, 760)
+        self.default_font_size = 30
+        self.default_large_font_size = 55
+        self.default_title_font_size = 70
+        
+        # Init window
         self.setWindowTitle('Salaat Times')
         self.setGeometry(100, 100, self.window_size[0], self.window_size[1]) # x-position, y-position, width, height
-        
-    def initButtons(self):
-        # Set program to grid layout
-        layout = QGridLayout()
-        self.setLayout(layout)
 
-        # Populate list of buttons
-        self.icons = []
-        for i in range(0, 10):
-            button = QPushButton("Button {}".format(i), self)
-            button.clicked.connect(lambda checked, index=i: self.onButtonPress("Button {}".format(index)))
-            #text.setAlignment(Qt.AlignCenter)
-            layout.addWidget(button, i, 1)
-            self.icons.append(button)
-        
-        # Add the side buttons
-        wing1 = QPushButton("<", self)
-        wing1.clicked.connect(lambda checked: self.onButtonPress("Left Wing") )
-        wing1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)  # Set size policy
-        #wing1.setFixedWidth(30)  # Set fixed width
-        layout.addWidget(wing1, 2, 0, 7, 1)
+        # Set params for buttons
+        widget = QWidget(self)
+        self.setCentralWidget(widget)
+        self.layout = QGridLayout()
+        self.layout.setHorizontalSpacing(20)
+        self.layout.setVerticalSpacing(0)
+        self.layout.setContentsMargins(0, 0, 0, 0)  # Set margins to 0
+        widget.setLayout(self.layout)
 
-        wing2 = QPushButton(">", self)
-        wing2.clicked.connect(lambda checked: self.onButtonPress("Right Wing") )
-        wing2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)  # Set size policy
-        #wing2.setFixedWidth(30)  # Set fixed width
-        layout.addWidget(wing2, 2, 2, 7, 1)
+        # Get initial prayer time
+        self.TimeNow = datetime.datetime.now().strftime("%H:%M") # REDUNDANT TODO
+        self.DateToday = datetime.datetime.now().strftime("%d/%m/%Y") # REDUNDANT TODO
+        self.PrayerTimes = [{"name":"Fujr", "time":"04:21"},
+                            {"name":"Sunrise", "time":"06:21"},
+                            {"name":"Dhuhr", "time":"12:15"},
+                            {"name":"Asr", "time":"15:18"},
+                            {"name":"Maghrib", "time":"18:03"},
+                            {"name":"Isha", "time":"19:25"},
+                            {"name":"Midnight", "time":"23:23"}] # TEMP. TODO: add method to get prayer times from API
+        self.NameOfNext = "Fujr"
+        self.TimeOfNext = datetime.datetime.now() + datetime.timedelta(minutes=126)
+        self.TimeTilNext = self.TimeOfNext - datetime.datetime.now()  # TODO should be calculated
 
+        # Populate default buttons
+        self.MainPageButtons()
         
-        # Init all button's font size 
-        self.resizeButtonFonts(self.icons, self.default_font_size)
+    def MainPageButtons(self):
+        allWidgets = []
+        
+        # Current Date
+        button = QLabel(datetime.datetime.now().strftime("%d/%m/%Y"), self)
+        button.setFont(QFont("Arial", self.default_font_size))
+        button.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(button, 1, 1, 1, 3)
+        allWidgets.append(button)
+        
+        # Current Time
+        button = QLabel(datetime.datetime.now().strftime("%H:%M:%S"), self)
+        button.setFont(QFont("Arial", self.default_large_font_size))
+        button.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(button, 2, 1, 1, 3)
+        allWidgets.append(button)
+        
+        # Time until next prayer
+        hoursTilNext = divmod(self.TimeTilNext.total_seconds(), 60**2) 
+        button = QLabel("Time until {}: {}h:{}m".format(self.NameOfNext, int(hoursTilNext[0]), int(hoursTilNext[1]/60)), self)
+        button.setFont(QFont("Arial", self.default_font_size))
+        button.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(button, 3, 1, 1, 3)
+        allWidgets.append(button)
+        
+        # Add seperating line
+        div = QFrame()
+        div.setFrameShape(QFrame.HLine)
+        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy.setHeightForWidth(div.sizePolicy().hasHeightForWidth())
+        div.setSizePolicy(sizePolicy)
+        div.setLineWidth(5)
+        self.layout.addWidget(div, 4, 1, 1, 3)
+        allWidgets.append(div)
+        
+        #Prayer times
+        for time in self.PrayerTimes:
+            prayerName = QLabel(time["name"], self)
+            prayerName.setFont(QFont("Arial", self.default_large_font_size))
+            prayerName.setAlignment(Qt.AlignRight)
+            self.layout.addWidget(prayerName, len(allWidgets)+ 1, 1)
+            
+            colon = QLabel(":", self)
+            colon.setFont(QFont("Arial", self.default_large_font_size))
+            colon.setAlignment(Qt.AlignCenter)
+            self.layout.addWidget(colon, len(allWidgets)+ 1, 2)
+            
+            prayerTime = QLabel(time["time"], self)
+            prayerTime.setFont(QFont("Arial", self.default_large_font_size))
+            prayerTime.setAlignment(Qt.AlignLeft)
+            self.layout.addWidget(prayerTime, len(allWidgets) + 1, 3)
+            
+            # Append to widet list in this format: [PrayerName, Colon, PrayerTime]
+            allWidgets.append([prayerName, colon, prayerTime])
+            
+        """
+        PrayerTime = QPushButton("Button {}".format(i), self)
+        
+        
+        self.PrayerTimes.append(PrayerTime)
+        """
 
-    # temp
-    def onButtonPress(self, Text = " "):
-        print(Text)
-    
-    # On resize window
-    def resizeEvent(self, event):
-        new_size = event.size()
-        
-        # Get changes in height and width, and use the lower change
-        height_increase = new_size.height() / self.window_size[0]
-        width_increase = new_size.width() / self.window_size[1]
-        
-        new_font_size = int(round(self.default_font_size * width_increase, 0))
-        if height_increase < width_increase: 
-            new_font_size = int(round(self.default_font_size * height_increase, 0))
-        
-        # Rescale onscreen buttons to new window size
-        self.resizeButtonFonts(self.icons, new_font_size)
-        
-    # 
-    def resizeButtonFonts(self, buttons, size, font = "Arial"):
-        # Rescale all button fonts
-        buttonFont = QFont(font, size, QFont.Bold)
-        for button in buttons:
-            button.setFont(buttonFont)
 
-def main():
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     adhaanApp = AdhaanApp()
     adhaanApp.show()
     sys.exit(app.exec_())
-
-if __name__ == '__main__':
-    main()

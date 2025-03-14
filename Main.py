@@ -51,36 +51,36 @@ class AdhaanApp(QMainWindow):
         allWidgets = []
         
         # Current Date
-        button = QLabel(datetime.datetime.now().strftime("%d/%m/%Y"), self)
-        button.setFont(QFont("Arial", self.default_font_size))
-        button.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(button, 1, 1, 1, maxGridCols)
-        allWidgets.append(button)
+        label = QLabel(datetime.datetime.now().strftime("%d/%m/%Y"), self)
+        label.setFont(QFont("Arial", self.default_font_size))
+        label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(label, 1, 1, 1, maxGridCols)
+        allWidgets.append(label)
         
         # Current Time
-        button = QLabel(datetime.datetime.now().strftime("%H:%M:%S"), self)
-        button.setFont(QFont("Arial", self.default_large_font_size))
-        button.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(button, 2, 1, 1, maxGridCols)
-        allWidgets.append(button)
+        label = QLabel(datetime.datetime.now().strftime("%H:%M:%S"), self)
+        label.setFont(QFont("Arial", self.default_large_font_size))
+        label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(label, 2, 1, 1, maxGridCols)
+        allWidgets.append(label)
         
         # Time until next prayer
         hoursTilNext = divmod(self.TimeTilNext.total_seconds(), 60**2) 
-        button = QLabel("Time until {}: {}h:{}m".format(self.NameOfNext, int(hoursTilNext[0]), int(hoursTilNext[1]/60)), self)
-        button.setFont(QFont("Arial", self.default_font_size))
-        button.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(button, 3, 1, 1, maxGridCols)
-        allWidgets.append(button)
+        label = QLabel("Time until {}: {}h:{}m".format(self.NameOfNext, int(hoursTilNext[0]), int(hoursTilNext[1]/60)), self)
+        label.setFont(QFont("Arial", self.default_font_size))
+        label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(label, 3, 1, 1, maxGridCols)
+        allWidgets.append(label)
         
         # Add seperating line
-        div = QFrame()
-        div.setFrameShape(QFrame.HLine)
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
         sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
-        sizePolicy.setHeightForWidth(div.sizePolicy().hasHeightForWidth())
-        div.setSizePolicy(sizePolicy)
-        div.setLineWidth(5)
-        self.layout.addWidget(div, 4, 1, 1, maxGridCols)
-        allWidgets.append(div)
+        sizePolicy.setHeightForWidth(line.sizePolicy().hasHeightForWidth())
+        line.setSizePolicy(sizePolicy)
+        line.setLineWidth(5)
+        self.layout.addWidget(line, 4, 1, 1, maxGridCols)
+        allWidgets.append(line)
         
         #Prayer times
         for time in self.PrayerTimes:

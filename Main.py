@@ -11,19 +11,11 @@ class AdhaanApp(QMainWindow):
         """
         # Init window
         super().__init__()
-        self.window_size = (600, 760)
-        
-        # Init program fonts
-        self.default_font_size = 30
-        self.default_large_font_size = 55
-        self.default_title_font_size = 70
-        self.default_Font = "Arial"
-        
-        # Init window
         self.setWindowTitle('Salaat Times')
-        self.setGeometry(100, 100, self.window_size[0], self.window_size[1]) # x-position, y-position, width, height
-
-        # Set params for buttons
+        self.window_size = (600, 760)
+        self.setGeometry(1500, 300, self.window_size[0], self.window_size[1]) # x-position, y-position, width, height
+        
+        # Set widget layout
         widget = QWidget(self)
         self.setCentralWidget(widget)
         self.layout = QGridLayout()
@@ -31,8 +23,23 @@ class AdhaanApp(QMainWindow):
         self.layout.setVerticalSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)  # Set margins to 0
         widget.setLayout(self.layout)
+        
+        # Init program fonts
+        self.default_font_size = 30
+        self.default_large_font_size = 55
+        self.default_title_font_size = 70
+        self.default_Font = "Arial"
 
         # Get initial prayer time
+        self.GetPrayerTimes()
+        
+        # Populate default buttons
+        self.MainPageButtons()
+    
+    def GetPrayerTimes(self):
+        """
+        Retrieves prayer times from API (currently hardcoded) and populates relevant instance variables. 
+        """
         self.TimeNow = datetime.datetime.now().strftime("%H:%M") # REDUNDANT TODO
         self.DateToday = datetime.datetime.now().strftime("%d/%m/%Y") # REDUNDANT TODO
         self.PrayerTimes = [{"name":"Fujr", "time":"04:21"},
@@ -45,12 +52,10 @@ class AdhaanApp(QMainWindow):
         self.NameOfNext = "Fujr"
         self.TimeOfNext = datetime.datetime.now() + datetime.timedelta(minutes=126)
         self.TimeTilNext = self.TimeOfNext - datetime.datetime.now()  # TODO should be calculated
-
-        # Populate default buttons
-        self.MainPageButtons()
-        
+    
     def MainPageButtons(self):
         # nRows x 5Col grid
+        
         maxGridCols = 5
         allWidgets = []
         
@@ -105,13 +110,7 @@ class AdhaanApp(QMainWindow):
             
             # Append to widet list in this format: [PrayerName, Colon, PrayerTime]
             allWidgets.append([prayerName, colon, prayerTime])
-            
-        """
-        PrayerTime = QPushButton("Button {}".format(i), self)
-        
-        
-        self.PrayerTimes.append(PrayerTime)
-        """
+
 
 
 if __name__ == '__main__':

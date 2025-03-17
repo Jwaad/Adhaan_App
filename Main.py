@@ -42,7 +42,7 @@ class AdhaanApp(QMainWindow):
         """
         Retrieves prayer times from API (currently hardcoded) and populates relevant instance variables. 
         """
-        self.TimeNow = datetime.datetime.now().strftime("%H:%M") # REDUNDANT TODO
+        self.TimeNow = datetime.datetime.now().strftime("%H:%M:%S") # REDUNDANT TODO
         self.DateToday = datetime.datetime.now().strftime("%d/%m/%Y") # REDUNDANT TODO
         self.PrayerTimes = [{"name":"Fujr", "time":"04:21", "font_size": self.DefaultFontSize},
                             {"name":"Sunrise", "time":"06:21", "font_size": self.DefaultFontSize},
@@ -58,70 +58,64 @@ class AdhaanApp(QMainWindow):
     def MainPageButtons(self):
         # nRows x 5Col grid
         
-        maxGridCols = 5
         self.AllWidgets = {}
         
         smallRowSpan = 1
         normalRowSpan = 2
+        normalColSpan = 1
+        maxColSpan = 5
         
-        size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Ignored)
-        #size_policy.setControlType(QSizePolicy.DefaultType)
+        standardSizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Ignored)
         
-        # Current Date
-        label = QLabel(datetime.datetime.now().strftime("%d/%m/%Y"), self)
-        label.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
-        label.setAlignment(Qt.AlignCenter)
-        label.setSizePolicy(size_policy)
-        self.layout.addWidget(label, 1, 1, smallRowSpan, maxGridCols)
-        self.AllWidgets["CurrentDate"] = {"Widgets": [label], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
+        self.TimeWidgets = [{"name":"CurrentDate", "default_text":datetime.datetime.now().strftime("%d/%m/%Y"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize},
+                        {"name":"CurrentTime", "default_text":datetime.datetime.now().strftime("%H:%M:%S"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":normalRowSpan, "col_span":maxColSpan, "font_size":self.DefaultLargeFontSize},
+                        {"name":"TimeUntilNextPrayer", "default_text": "Time Until Fujr: 2h 10m", "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize}]
         
-        # Current Time
-        label = QLabel(datetime.datetime.now().strftime("%H:%M:%S"), self)
-        label.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
-        label.setAlignment(Qt.AlignCenter)
-        label.setSizePolicy(size_policy)
-        self.layout.addWidget(label, 2, 1, normalRowSpan, maxGridCols)
-        self.AllWidgets["CurrentTime"] = {"Widgets": [label], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
+        # Might need this later, so leaving here
+        # hoursTilNext = divmod(self.TimeTilNext.total_seconds(), 60**2) 
         
-        # Time until next prayer
-        hoursTilNext = divmod(self.TimeTilNext.total_seconds(), 60**2) 
-        label = QLabel("Time until {}: {}h:{}m".format(self.NameOfNext, int(hoursTilNext[0]), int(hoursTilNext[1]/60)), self)
-        label.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
-        label.setAlignment(Qt.AlignCenter)
-        label.setSizePolicy(size_policy)
-        self.layout.addWidget(label, 4, 1, smallRowSpan, maxGridCols)
-        self.AllWidgets["TimeTilNext"] = {"Widgets": [label], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
+        # Populate time widgets
+        rows = 1
+        for widget in self.TimeWidgets:
+            label = widget["type"](widget["default_text"], self)
+            label.setFont(QFont(self.DefaultFont, widget["font_size"]))
+            label.setSizePolicy(widget["size_policy"])
+            if widget["type"] == QLabel:
+                label.setAlignment(widget["alignment"])
+            elif widget["type"] == QFrame:
+                line.setLineWidth(widget["line_width"])
+            self.layout.addWidget(label, rows, 1, widget["row_span"], widget["col_span"])
+            self.AllWidgets[widget["name"]] = {"Widgets": [label], "Font": self.DefaultFont, "FontSize": widget["font_size"]}
+            rows += widget["row_span"]
         
         # Add seperating line
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
         lineSizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
-        lineSizePolicy.setHeightForWidth(line.sizePolicy().hasHeightForWidth())
         line.setSizePolicy(lineSizePolicy)
         line.setLineWidth(5)
-        self.layout.addWidget(line, 5, 1, smallRowSpan, maxGridCols)
+        self.layout.addWidget(line, 5, 1, smallRowSpan, maxColSpan)
         self.AllWidgets["HLine"] = {"Widgets": [line], "Font": None, "FontSize": None, "lineWidth": 5}
+        rows += smallRowSpan
 
-        #TODO find better way to get this automatically I DONT LIKE THAT THIS IS MANUAL
-        rows = 6 # The above is a total of 5 rows, so start from 6th
-        #Prayer times
+        # Populate Prayer times
         for time in self.PrayerTimes:
             prayerName = QLabel(time["name"], self)
             prayerName.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
             prayerName.setAlignment(Qt.AlignRight)
-            prayerName.setSizePolicy(size_policy)
+            prayerName.setSizePolicy(standardSizePolicy)
             self.layout.addWidget(prayerName, rows, 1, normalRowSpan, 2)
             
             colon = QLabel(":", self)
             colon.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
             colon.setAlignment(Qt.AlignCenter)
-            colon.setSizePolicy(size_policy)
+            colon.setSizePolicy(standardSizePolicy)
             self.layout.addWidget(colon, rows, 3, normalRowSpan, 1)
             
             prayerTime = QLabel(time["time"], self)
             prayerTime.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
             prayerTime.setAlignment(Qt.AlignLeft)
-            prayerTime.setSizePolicy(size_policy)
+            prayerTime.setSizePolicy(standardSizePolicy)
             self.layout.addWidget(prayerTime, rows, 4, normalRowSpan, 2)
 
             # Each prayer time takes up 2 rows, so increment by 2

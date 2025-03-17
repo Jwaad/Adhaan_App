@@ -1,3 +1,18 @@
+# Written by Jwaad Hussain 2025
+# TODO: 
+#   HIGH PRIOIRTY----------------------
+#   GET PRAYER TIMES FOR API 
+#   GET TIME TIL NEXT PRAYER
+#   CALCULATE LAST THIRD AND ISLAMIC MIDNIGHT
+#   MINIMISE TO TRAY
+#
+#   LOW PRIORITY-----------------------
+#   DOWNLOAD WHOLE REST OF MONTH TO MEM
+#   REMEMBER PREVIOUS SIZE AND POS
+#   OPTIONS MENU FOR CUSTOMISATION
+#   OTHER PRAYER CALCS
+#   MOUSE OVER ICONS FOR EXTRA INFO
+
 import sys
 import datetime
 from PyQt5.QtWidgets import *
@@ -9,14 +24,37 @@ class AdhaanApp(QMainWindow):
         """
         Initialises the Salaat Times window, setting its size and initialising its buttons.
         """
-        # Init window
+        # Init QWidgets
         super().__init__()
+        
+        # Check if another instance is running
+        self.memory = QSharedMemory("AdthaanAppHussain")
+        if self.memory.attach():
+            print("Application is already running!")
+            sys.exit()  # Exit if the app is already running
+        
+        # Init window
         self.setWindowTitle('Salaat Times')
         self.WindowSize = (600, 850) # (width, height)
         self.setGeometry(1500, 300, self.WindowSize[0], self.WindowSize[1]) # x-position, y-position, width, height
         self.WinHeightAtPreviousResize = self.WindowSize[1]
         
-        # Set widget layout
+        # Setup tray icon
+        self.tray_icon = QSystemTrayIcon(self)
+        self.tray_icon.setIcon(QIcon("icon.png"))  # Use a suitable icon file
+        self.tray_icon.setVisible(False)
+        tray_menu = QMenu()
+        restore_action = QAction("Restore", self)
+        restore_action.triggered.connect(self.RestoreWindowFromTray)
+        quit_action = QAction("Quit", self)
+        quit_action.triggered.connect(self.QuitAppFromTray)
+        tray_menu.addAction(restore_action)
+        tray_menu.addAction(quit_action)
+        self.tray_icon.setContextMenu(tray_menu)
+        self.setWindowFlags(self.windowFlags() | 0x00000001)  # Qt::WindowMinimizeButtonHint
+        self.tray_icon.activated.connect(self.OnTrayIconActivation)
+        
+        # Setup widget layout
         widget = QWidget(self)
         self.setCentralWidget(widget)
         self.layout = QGridLayout()
@@ -37,13 +75,58 @@ class AdhaanApp(QMainWindow):
         
         # Populate default buttons
         self.MainPageButtons()
+        
+        # Initial time update
+        self.UpdateCurrentTime()
+        self.UpdateTilUntilNextPrayer()
+        
+        # Timer to update clock every second
+        self.SecondTimer = QTimer(self)
+        self.SecondTimer.timeout.connect(self.UpdateCurrentTime)
+        self.SecondTimer.start(1000)  # 1000 ms = 1 second
     
+    def OnTrayIconActivation(self, reason):
+        """Handle tray icon activation"""
+        if reason == QSystemTrayIcon.DoubleClick:
+            self.RestoreWindowFromTray()  # Restore the window if double-clicked
+        elif reason == QSystemTrayIcon.MiddleClick:
+            self.QuitAppFromTray()
+            
+    def changeEvent(self, event):
+        """Override the close event to minimize to the system tray instead of quitting."""
+        if event.type() == QEvent.WindowStateChange:
+            if self.isMinimized():
+                self.hide()  # Hide the window and keep it running in the system tray
+                self.tray_icon.setVisible(True)
+
+    def RestoreWindowFromTray(self):
+        """Restore the window when clicking the 'Restore' action in the tray menu."""
+        self.tray_icon.setVisible(False)
+        self.show()
+
+    def QuitAppFromTray(self):
+        """Quit the app when clicking the 'Quit' action in the tray menu."""
+        QApplication.quit()
+        
+    def UpdateCurrentTime(self):
+        """Updates the QLabel with the current time."""
+        timeNow = datetime.datetime.now()
+        self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M:%S"))
+        
+        # Update prayer time each minute
+        if timeNow.strftime("%S") == "00":
+            # TODO add a backup method incase the second gets skipped (low priority)
+            self.UpdateTilUntilNextPrayer()
+        
+    
+    def UpdateTilUntilNextPrayer(self):
+        """Updates the QLabel with the current time."""
+        print("TODO: UpdateTilUntilNextPrayer")
+        
     def GetPrayerTimes(self):
         """
         Retrieves prayer times from API (currently hardcoded) and populates relevant instance variables. 
         """
-        self.TimeNow = datetime.datetime.now().strftime("%H:%M:%S") # REDUNDANT TODO
-        self.DateToday = datetime.datetime.now().strftime("%d/%m/%Y") # REDUNDANT TODO
         self.PrayerTimes = [{"name":"Fujr", "time":"04:21", "font_size": self.DefaultFontSize},
                             {"name":"Sunrise", "time":"06:21", "font_size": self.DefaultFontSize},
                             {"name":"Dhuhr", "time":"12:15", "font_size": self.DefaultFontSize},
@@ -123,7 +206,6 @@ class AdhaanApp(QMainWindow):
             
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
  
-
         
     def resizeEvent(self, event):
 
@@ -154,17 +236,8 @@ class AdhaanApp(QMainWindow):
                         widget.setFont(QFont(self.AllWidgets[key]["Font"], int(round(self.AllWidgets[key]["FontSize"] * self.TextScalar, 0))))
                 
             self.WinHeightAtPreviousResize = new_size.height() 
-            # TODO shrinking window a bit crap
-            # Also, resizes instantly, instead of after a certain amount of ticks:
-            # THEREFORE SOLUTION:
-            # trigger this resize, in intervals of 10pix change, lass than 5 pix = no resize.
-            # ight gnight
-            # DOESNT ALLOW TO RESIZE WINDOW IN REVERSE. MUST BE QGRID RESIZING POLICY<
-            # TODO: FIX, i must be going about resizing all wrong.
-            
-            
-                
-            
+    
+
         
 if __name__ == '__main__':
     app = QApplication(sys.argv)

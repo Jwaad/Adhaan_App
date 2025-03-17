@@ -62,6 +62,7 @@ class AdhaanApp(QMainWindow):
         
         smallRowSpan = 1
         normalRowSpan = 2
+        
         normalColSpan = 1
         maxColSpan = 5
         
@@ -94,7 +95,7 @@ class AdhaanApp(QMainWindow):
         lineSizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
         line.setSizePolicy(lineSizePolicy)
         line.setLineWidth(5)
-        self.layout.addWidget(line, 5, 1, smallRowSpan, maxColSpan)
+        self.layout.addWidget(line, rows, 1, smallRowSpan, maxColSpan)
         self.AllWidgets["HLine"] = {"Widgets": [line], "Font": None, "FontSize": None, "lineWidth": 5}
         rows += smallRowSpan
 
@@ -118,8 +119,7 @@ class AdhaanApp(QMainWindow):
             prayerTime.setSizePolicy(standardSizePolicy)
             self.layout.addWidget(prayerTime, rows, 4, normalRowSpan, 2)
 
-            # Each prayer time takes up 2 rows, so increment by 2
-            rows += 2
+            rows += normalRowSpan
             
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
  

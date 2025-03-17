@@ -12,24 +12,25 @@ class AdhaanApp(QMainWindow):
         # Init window
         super().__init__()
         self.setWindowTitle('Salaat Times')
-        self.WindowSize = (600, 760)
+        self.WindowSize = (600, 850) # (width, height)
         self.setGeometry(1500, 300, self.WindowSize[0], self.WindowSize[1]) # x-position, y-position, width, height
+        self.WinHeightAtPreviousResize = self.WindowSize[1]
         
         # Set widget layout
         widget = QWidget(self)
         self.setCentralWidget(widget)
         self.layout = QGridLayout()
-        self.layout.setHorizontalSpacing(20)
+        self.layout.setHorizontalSpacing(0)
         self.layout.setVerticalSpacing(0)
-        self.layout.setContentsMargins(0, 0, 0, 0)  # Set margins to 0
+        self.layout.setContentsMargins(5, 5, 5, 5)  # Set margins to 0
+        self.layout.setSpacing(0)
         widget.setLayout(self.layout)
         
         # Init program fonts
         self.DefaultFontSize = 30
         self.DefaultLargeFontSize = 55
         self.DefaultTitleFontSize = 70
-        self.DefaultFont = "Arial"
-        self.TextScalar = 1 # Set proportionally to window size 
+        self.DefaultFont = "Verdana"
 
         # Get initial prayer time
         self.GetPrayerTimes()
@@ -60,18 +61,26 @@ class AdhaanApp(QMainWindow):
         maxGridCols = 5
         self.AllWidgets = {}
         
+        smallRowSpan = 1
+        normalRowSpan = 2
+        
+        size_policy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Ignored)
+        #size_policy.setControlType(QSizePolicy.DefaultType)
+        
         # Current Date
         label = QLabel(datetime.datetime.now().strftime("%d/%m/%Y"), self)
         label.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
         label.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(label, 1, 1, 1, maxGridCols)
+        label.setSizePolicy(size_policy)
+        self.layout.addWidget(label, 1, 1, smallRowSpan, maxGridCols)
         self.AllWidgets["CurrentDate"] = {"Widgets": [label], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
         
         # Current Time
         label = QLabel(datetime.datetime.now().strftime("%H:%M:%S"), self)
         label.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
         label.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(label, 2, 1, 1, maxGridCols)
+        label.setSizePolicy(size_policy)
+        self.layout.addWidget(label, 2, 1, normalRowSpan, maxGridCols)
         self.AllWidgets["CurrentTime"] = {"Widgets": [label], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
         
         # Time until next prayer
@@ -79,43 +88,58 @@ class AdhaanApp(QMainWindow):
         label = QLabel("Time until {}: {}h:{}m".format(self.NameOfNext, int(hoursTilNext[0]), int(hoursTilNext[1]/60)), self)
         label.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
         label.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(label, 3, 1, 1, maxGridCols)
+        label.setSizePolicy(size_policy)
+        self.layout.addWidget(label, 4, 1, smallRowSpan, maxGridCols)
         self.AllWidgets["TimeTilNext"] = {"Widgets": [label], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
         
         # Add seperating line
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
-        sizePolicy.setHeightForWidth(line.sizePolicy().hasHeightForWidth())
-        line.setSizePolicy(sizePolicy)
+        lineSizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        lineSizePolicy.setHeightForWidth(line.sizePolicy().hasHeightForWidth())
+        line.setSizePolicy(lineSizePolicy)
         line.setLineWidth(5)
-        self.layout.addWidget(line, 4, 1, 1, maxGridCols)
+        self.layout.addWidget(line, 5, 1, smallRowSpan, maxGridCols)
         self.AllWidgets["HLine"] = {"Widgets": [line], "Font": None, "FontSize": None, "lineWidth": 5}
-        
+
+        #TODO find better way to get this automatically I DONT LIKE THAT THIS IS MANUAL
+        rows = 6 # The above is a total of 5 rows, so start from 6th
         #Prayer times
         for time in self.PrayerTimes:
             prayerName = QLabel(time["name"], self)
             prayerName.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
             prayerName.setAlignment(Qt.AlignRight)
-            self.layout.addWidget(prayerName, len(self.AllWidgets)+ 1, 1, 1, 2)
+            prayerName.setSizePolicy(size_policy)
+            self.layout.addWidget(prayerName, rows, 1, normalRowSpan, 2)
             
             colon = QLabel(":", self)
             colon.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
             colon.setAlignment(Qt.AlignCenter)
-            self.layout.addWidget(colon, len(self.AllWidgets)+ 1, 3, 1, 1)
+            colon.setSizePolicy(size_policy)
+            self.layout.addWidget(colon, rows, 3, normalRowSpan, 1)
             
             prayerTime = QLabel(time["time"], self)
             prayerTime.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
             prayerTime.setAlignment(Qt.AlignLeft)
-            self.layout.addWidget(prayerTime, len(self.AllWidgets) + 1, 4, 1, 2)
+            prayerTime.setSizePolicy(size_policy)
+            self.layout.addWidget(prayerTime, rows, 4, normalRowSpan, 2)
+
+            # Each prayer time takes up 2 rows, so increment by 2
+            rows += 2
             
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
+ 
+
         
-        
-    def resizeEvent(self, event):      
+    def resizeEvent(self, event):
+
             new_size = event.size()
+            stepSize = 20
             
-            # Update font sizes based on smaller height or width
+            if abs(self.WinHeightAtPreviousResize - new_size.height()) < stepSize:
+                return
+            
+            # Update font sizes based on height change
             self.TextScalar = new_size.height() / self.WindowSize[1] # % increase of height
             
             # Update font sizes of each widget if applicable
@@ -135,13 +159,14 @@ class AdhaanApp(QMainWindow):
                     if widget.__class__.__name__ == 'QLabel':
                         widget.setFont(QFont(self.AllWidgets[key]["Font"], int(round(self.AllWidgets[key]["FontSize"] * self.TextScalar, 0))))
                 
-                
-                """if widget.__class__.__name__ == 'list':
-                    for subwidget in widget:
-                        if subwidget.__class__.__name__ == 'QLabel':
-                            subwidget.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
-                if widget.__class__.__name__ == 'QLabel':
-                    widget.setFont(QFont(self.DefaultFont, self.DefaultFontSize))"""
+            self.WinHeightAtPreviousResize = new_size.height() 
+            # TODO shrinking window a bit crap
+            # Also, resizes instantly, instead of after a certain amount of ticks:
+            # THEREFORE SOLUTION:
+            # trigger this resize, in intervals of 10pix change, lass than 5 pix = no resize.
+            # ight gnight
+            # DOESNT ALLOW TO RESIZE WINDOW IN REVERSE. MUST BE QGRID RESIZING POLICY<
+            # TODO: FIX, i must be going about resizing all wrong.
             
             
                 

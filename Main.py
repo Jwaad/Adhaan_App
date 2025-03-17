@@ -12,6 +12,7 @@
 #   OPTIONS MENU FOR CUSTOMISATION
 #   OTHER PRAYER CALCS
 #   MOUSE OVER ICONS FOR EXTRA INFO
+#   Fix strange horizontal minimizing behaviour
 
 import sys
 import datetime
@@ -38,6 +39,7 @@ class AdhaanApp(QMainWindow):
         self.WindowSize = (600, 850) # (width, height)
         self.setGeometry(1500, 300, self.WindowSize[0], self.WindowSize[1]) # x-position, y-position, width, height
         self.WinHeightAtPreviousResize = self.WindowSize[1]
+        self.setWindowIcon(QIcon("icon.png"))
         
         # Setup tray icon
         self.tray_icon = QSystemTrayIcon(self)

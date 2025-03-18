@@ -1,15 +1,14 @@
 # Written by Jwaad Hussain 2025
 # TODO: 
 #   HIGH PRIOIRTY----------------------
-#   REMEMBER PREVIOUS SIZE AND POS
-#
+#   MOUSE OVER ICONS FOR EXTRA INFO
+#   
 #   LOW PRIORITY-----------------------
+#   Experiment with style: colours and bolding
 #   DOWNLOAD WHOLE REST OF MONTH TO MEM
 #   OPTIONS MENU FOR CUSTOMISATION
 #   OTHER PRAYER CALCS
-#   MOUSE OVER ICONS FOR EXTRA INFO
 #   CALCULATE LAST THIRD
-#   Fix strange horizontal minimizing behaviour
 #   Alarms / adthaans
 #   Reminder / ding ding
 #   Settings button
@@ -30,6 +29,7 @@
 import sys
 import datetime
 import requests
+import json
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -102,7 +102,41 @@ class AdhaanApp(QMainWindow):
         self.SecondTimer = QTimer(self)
         self.SecondTimer.timeout.connect(self.UpdateCurrentTime)
         self.SecondTimer.start(1000)  # 1000 ms = 1 second
+        
+        # Load Save data
+        self.LoadSaveData()
+        
+        # Attach closing events to close
+        #self.quit.triggered.connect(self.close)
+        
+        #self.SaveData = {"window_pos": [1500, 300], "window_size": self.WindowSize}
     
+    def LoadSaveData(self):
+        try:
+            with open('data.json', 'r') as f:
+                self.SaveData = json.loads(f.read())
+                self.setGeometry(self.SaveData["window_pos"][0],self.SaveData["window_pos"][1], self.SaveData["window_size"][0], self.SaveData["window_size"][1]) # x-position, y-position, width, height
+        except FileNotFoundError:
+            self.SaveData = {"window_pos": [1500, 300], "window_size": self.WindowSize}
+            json.dumps(self.SaveData, ensure_ascii=False)
+        except json.JSONDecodeError:
+            self.SaveData = {"window_pos": [1500, 300], "window_size": self.WindowSize}
+            json.dumps(self.SaveData, ensure_ascii=False)
+        except:
+            self.SaveData = {"window_pos": [1500, 300], "window_size": self.WindowSize}
+            json.dumps(self.SaveData, ensure_ascii=False)
+            # Lazy but, idk if it will matter
+
+    def SaveUserData(self):
+        self.SaveData["window_pos"] = [self.pos().x(), self.pos().y()]
+        self.SaveData["window_size"] = [self.size().width(), self.size().height()]
+        with open('data.json', 'w') as saveFile:
+            json.dump(self.SaveData, saveFile, ensure_ascii=False)
+        
+    def closeEvent(self, event):
+        """On close do some processes"""
+        self.SaveUserData()
+        
     def OnTrayIconActivation(self, reason):
         """Handle tray icon activation"""
         if reason == QSystemTrayIcon.DoubleClick:

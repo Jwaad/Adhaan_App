@@ -1,9 +1,10 @@
 ('C:\\Users\\jwaad\\Desktop\\Work\\Coding\\Projects\\Adhaan App '
  '2.0\\Adhaan_App\\build\\Main\\Main.exe',
- True,
+ False,
  False,
  True,
- 'C:\\Users\\jwaad\\scoop\\apps\\python\\current\\Lib\\site-packages\\PyInstaller\\bootloader\\images\\icon-console.ico',
+ ['C:\\Users\\jwaad\\Desktop\\Work\\Coding\\Projects\\Adhaan App '
+  '2.0\\Adhaan_App\\icon.ico'],
  None,
  False,
  False,
@@ -76,8 +77,8 @@
  [],
  False,
  False,
- 1742262652,
- [('run.exe',
-   'C:\\Users\\jwaad\\scoop\\apps\\python\\current\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\run.exe',
+ 1742265035,
+ [('runw.exe',
+   'C:\\Users\\jwaad\\scoop\\apps\\python\\current\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',
    'EXECUTABLE')],
  'C:\\Users\\jwaad\\scoop\\apps\\python\\current\\python311.dll')

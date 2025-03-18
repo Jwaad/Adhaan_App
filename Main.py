@@ -108,6 +108,7 @@ class AdhaanApp(QMainWindow):
         """Restore the window when clicking the 'Restore' action in the tray menu."""
         self.tray_icon.setVisible(False)
         self.show()
+        self.activateWindow()
 
     def QuitAppFromTray(self):
         """Quit the app when clicking the 'Quit' action in the tray menu."""
@@ -126,7 +127,16 @@ class AdhaanApp(QMainWindow):
     
     def UpdateTilUntilNextPrayer(self):
         """Updates the QLabel with the current time."""
-        print("TODO: UpdateTilUntilNextPrayer")
+        #print("TODO: UpdateTilUntilNextPrayer")
+        timeNow = datetime.datetime.now()
+        for prayer in self.PrayerTimes:
+            prayerDatetime = datetime.datetime.strptime(datetime.datetime.now().strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
+            if timeNow <= prayerDatetime:
+                # self.NameOfNext = prayer["name"]
+                timeTilNext = prayerDatetime - datetime.datetime.now()  # TODO should be calculated
+                formattedTimeTilNext = str(timeTilNext).split(":")
+                self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].setText("Time until {}: {}h {}m".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1]))
+                return
         
     def GetPrayerTimes(self):
         """

@@ -1,7 +1,8 @@
 # Written by Jwaad Hussain 2025
 # TODO: 
 #   HIGH PRIOIRTY----------------------
-#   MOUSE OVER ICONS FOR EXTRA INFO
+#   increase amount of cols, to make ? icon smaller. Or change it's horizontal resizing policy
+#   Customise tool tip style, fonnt, fontsize etc
 #   
 #   LOW PRIORITY-----------------------
 #   Experiment with style: colours and bolding
@@ -179,8 +180,7 @@ class AdhaanApp(QMainWindow):
         for prayer in self.PrayerTimes:
             prayerDatetime = datetime.datetime.strptime(datetime.datetime.now().strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
             if timeNow <= prayerDatetime:
-                # self.NameOfNext = prayer["name"]
-                timeTilNext = prayerDatetime - datetime.datetime.now()  # TODO should be calculated
+                timeTilNext = prayerDatetime - datetime.datetime.now() + datetime.timedelta(seconds=60)
                 formattedTimeTilNext = str(timeTilNext).split(":")
                 self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].setText("Time until {}: {}h {}m".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1]))
                 return

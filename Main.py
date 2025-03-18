@@ -213,7 +213,15 @@ class AdhaanApp(QMainWindow):
                             {"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize}] # TEMP. TODO: add method to get prayer times from API
 
     def MainPageButtons(self):
-        # nRows x 5Col grid
+        
+        # Add info icon
+        def createToolTip(toolTipText):
+            infoIcon = QLabel("❔", self)
+            infoIcon.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
+            infoIcon.setAlignment(Qt.AlignTop | Qt.AlignLeft )
+            infoIcon.setSizePolicy(standardSizePolicy)
+            infoIcon.setToolTip(toolTipText)
+            return infoIcon
         
         self.AllWidgets = {}
         
@@ -273,27 +281,23 @@ class AdhaanApp(QMainWindow):
 
             # Add tool tip to specific prayer times
             if time["name"] == "Isha":
-                infoIcon = QLabel("❔", self)
-                infoIcon.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
-                infoIcon.setAlignment(Qt.AlignTop | Qt.AlignLeft )
-                infoIcon.setSizePolicy(standardSizePolicy)
-                infoIcon.setToolTip("First third: {}".format("12:00"))
+                # Calculate first third # TODO FINISH AND USE THIS CALCULATIOON
+                firstThird = datetime.datetime.strptime(time["time"], "%H:%M")
+                infoIcon = createToolTip("First third: {}".format("12:00"))
                 self.layout.addWidget(infoIcon, rows, 6, 1, 1)
                 self.AllWidgets["IshaToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
             if time["name"] == "Midnight":
-                infoIcon = QLabel("❔", self)
-                infoIcon.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
-                infoIcon.setAlignment(Qt.AlignTop | Qt.AlignLeft )
-                infoIcon.setSizePolicy(standardSizePolicy)
-                infoIcon.setToolTip("Last third: {}".format("03:00"))
+                # Calculate first third  # TODO FINISH AND USE THIS CALCULATIOON
+                firstThird = datetime.datetime.strptime(time["time"], "%H:%M")
+                infoIcon = createToolTip("Last third: {}".format("03:00"))
                 self.layout.addWidget(infoIcon, rows, 6, 1, 1)
                 self.AllWidgets["MidnightToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
 
-                
             rows += normalRowSpan
-            
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
- 
+
+        
+    
     def resizeEvent(self, event):
 
             new_size = event.size()

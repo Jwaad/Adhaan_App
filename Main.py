@@ -12,6 +12,20 @@
 #   Fix strange horizontal minimizing behaviour
 #   Alarms / adthaans
 #   Reminder / ding ding
+#   Settings button
+#   pin to top
+#   prayer time popups
+#   Tray info, mins remaing / colour for urgency
+#
+#   Known Bugs--------------------------
+#   strange horizontal minimizing behaviour
+#   With multiple monitors, might start on a screen that no longer exists. I.E. starts off screen.add()
+#   Windows + arrow key makes UI black. Not sure why, maybe due to resizing code?
+#   Dist version doesn't run in tray
+
+
+# BUILD COMMAND: pyinstaller .\Main.py --i=icon.ico --windowed
+# ICON TO ICO: https://icoconvert.com/
 
 import sys
 import datetime

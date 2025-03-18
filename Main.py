@@ -271,6 +271,25 @@ class AdhaanApp(QMainWindow):
             prayerTime.setSizePolicy(standardSizePolicy)
             self.layout.addWidget(prayerTime, rows, 4, normalRowSpan, 2)
 
+            # Add tool tip to specific prayer times
+            if time["name"] == "Isha":
+                infoIcon = QLabel("❔", self)
+                infoIcon.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
+                infoIcon.setAlignment(Qt.AlignTop | Qt.AlignLeft )
+                infoIcon.setSizePolicy(standardSizePolicy)
+                infoIcon.setToolTip("First third: {}".format("12:00"))
+                self.layout.addWidget(infoIcon, rows, 6, 1, 1)
+                self.AllWidgets["IshaToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
+            if time["name"] == "Midnight":
+                infoIcon = QLabel("❔", self)
+                infoIcon.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
+                infoIcon.setAlignment(Qt.AlignTop | Qt.AlignLeft )
+                infoIcon.setSizePolicy(standardSizePolicy)
+                infoIcon.setToolTip("Last third: {}".format("03:00"))
+                self.layout.addWidget(infoIcon, rows, 6, 1, 1)
+                self.AllWidgets["MidnightToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
+
+                
             rows += normalRowSpan
             
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}

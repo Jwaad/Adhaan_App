@@ -53,7 +53,6 @@ class AdhaanApp(QWidget):
 
         # Init all button's font size 
         self.resizeButtonFonts(self.PrayerTimes, self.default_font_size)
-
         #self.setLayout(layout)
         
         

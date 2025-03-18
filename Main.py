@@ -1,7 +1,6 @@
 # Written by Jwaad Hussain 2025
 # TODO: 
 #   HIGH PRIOIRTY----------------------
-#   GET TIME TIL NEXT PRAYER
 #   REMEMBER PREVIOUS SIZE AND POS
 #
 #   LOW PRIORITY-----------------------
@@ -37,7 +36,7 @@ class AdhaanApp(QMainWindow):
         
         # Init window
         self.setWindowTitle('Salaat Times')
-        self.WindowSize = (600, 850) # (width, height)
+        self.WindowSize = (300, 500) # (width, height)
         self.setGeometry(1500, 300, self.WindowSize[0], self.WindowSize[1]) # x-position, y-position, width, height
         self.WinHeightAtPreviousResize = self.WindowSize[1]
         self.setWindowIcon(QIcon("icon.png"))
@@ -68,9 +67,9 @@ class AdhaanApp(QMainWindow):
         widget.setLayout(self.layout)
         
         # Init program fonts
-        self.DefaultFontSize = 30
-        self.DefaultLargeFontSize = 55
-        self.DefaultTitleFontSize = 70
+        self.DefaultFontSize = 15
+        self.DefaultLargeFontSize = 30
+        self.DefaultTitleFontSize = 50
         self.DefaultFont = "Verdana"
 
         # Get initial prayer times
@@ -165,7 +164,6 @@ class AdhaanApp(QMainWindow):
                             {"name":"Isha", "time":todaysPrayerTimes["isha"],"font_size": self.DefaultFontSize},
                             {"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize}] # TEMP. TODO: add method to get prayer times from API
 
-    
     def MainPageButtons(self):
         # nRows x 5Col grid
         
@@ -173,18 +171,13 @@ class AdhaanApp(QMainWindow):
         
         smallRowSpan = 1
         normalRowSpan = 2
-        
         normalColSpan = 1
         maxColSpan = 5
         
         standardSizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Ignored)
-        
         self.TimeWidgets = [{"name":"CurrentDate", "default_text":datetime.datetime.now().strftime("%d/%m/%Y"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize},
                         {"name":"CurrentTime", "default_text":datetime.datetime.now().strftime("%H:%M:%S"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":normalRowSpan, "col_span":maxColSpan, "font_size":self.DefaultLargeFontSize},
                         {"name":"TimeUntilNextPrayer", "default_text": "Time Until ?: ?h ?m", "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize}]
-        
-        # Might need this later, so leaving here
-        # hoursTilNext = divmod(self.TimeTilNext.total_seconds(), 60**2) 
         
         # Populate time widgets
         rows = 1
@@ -234,7 +227,6 @@ class AdhaanApp(QMainWindow):
             
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
  
-        
     def resizeEvent(self, event):
 
             new_size = event.size()
@@ -264,9 +256,7 @@ class AdhaanApp(QMainWindow):
                         widget.setFont(QFont(self.AllWidgets[key]["Font"], int(round(self.AllWidgets[key]["FontSize"] * self.TextScalar, 0))))
                 
             self.WinHeightAtPreviousResize = new_size.height() 
-    
 
-        
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     adhaanApp = AdhaanApp()

@@ -1,21 +1,22 @@
 # Written by Jwaad Hussain 2025
 # TODO: 
 #   HIGH PRIOIRTY----------------------
-#   GET PRAYER TIMES FOR API 
 #   GET TIME TIL NEXT PRAYER
-#   CALCULATE LAST THIRD AND ISLAMIC MIDNIGHT
-#   MINIMISE TO TRAY
+#   REMEMBER PREVIOUS SIZE AND POS
 #
 #   LOW PRIORITY-----------------------
 #   DOWNLOAD WHOLE REST OF MONTH TO MEM
-#   REMEMBER PREVIOUS SIZE AND POS
 #   OPTIONS MENU FOR CUSTOMISATION
 #   OTHER PRAYER CALCS
 #   MOUSE OVER ICONS FOR EXTRA INFO
+#   CALCULATE LAST THIRD
 #   Fix strange horizontal minimizing behaviour
+#   Alarms / adthaans
+#   Reminder / ding ding
 
 import sys
 import datetime
+import requests
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -72,7 +73,9 @@ class AdhaanApp(QMainWindow):
         self.DefaultTitleFontSize = 70
         self.DefaultFont = "Verdana"
 
-        # Get initial prayer time
+        # Get initial prayer times
+        self.DefaultAPI = "http://www.londonprayertimes.com/api/times/"
+        self.APIKey = "17522509-896f-49b7-80c8-975c4be643b4"
         self.GetPrayerTimes()
         
         # Populate default buttons
@@ -129,16 +132,29 @@ class AdhaanApp(QMainWindow):
         """
         Retrieves prayer times from API (currently hardcoded) and populates relevant instance variables. 
         """
-        self.PrayerTimes = [{"name":"Fujr", "time":"04:21", "font_size": self.DefaultFontSize},
-                            {"name":"Sunrise", "time":"06:21", "font_size": self.DefaultFontSize},
-                            {"name":"Dhuhr", "time":"12:15", "font_size": self.DefaultFontSize},
-                            {"name":"Asr", "time":"15:18","font_size": self.DefaultFontSize},
-                            {"name":"Maghrib", "time":"18:03","font_size": self.DefaultFontSize},
-                            {"name":"Isha", "time":"19:25","font_size": self.DefaultFontSize},
-                            {"name":"Midnight", "time":"23:23","font_size": self.DefaultFontSize}] # TEMP. TODO: add method to get prayer times from API
-        self.NameOfNext = "Fujr"
-        self.TimeOfNext = datetime.datetime.now() + datetime.timedelta(minutes=126)
-        self.TimeTilNext = self.TimeOfNext - datetime.datetime.now()  # TODO should be calculated
+        # Call API and get todays prayer times
+        year = datetime.datetime.now().strftime("%Y")
+        month = datetime.datetime.now().strftime("%m")
+        day = datetime.datetime.now().strftime("%d")
+        response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year,month, self.APIKey))
+        apiResponse = response.json()
+        todaysPrayerTimes = apiResponse["times"][datetime.datetime.now().strftime("%Y-%m-%d")]
+        # print(response.status_code) # TODO handle error codes here
+        
+        # Get islamic midnight time
+        datetimeMaghrib = datetime.datetime.strptime(year + "-" + month + "-" + day + todaysPrayerTimes["magrib"], "%Y-%m-%d%H:%M")
+        datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + day + todaysPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
+        midnight = (datetimeMaghrib + (datetimeFujr - datetimeMaghrib) / 2).strftime("%H:%M")
+        
+        #store prayer times in dict
+        self.PrayerTimes = [{"name":"Fujr", "time":todaysPrayerTimes["fajr"], "font_size": self.DefaultFontSize},
+                            {"name":"Sunrise", "time":todaysPrayerTimes["sunrise"], "font_size": self.DefaultFontSize},
+                            {"name":"Dhuhr", "time":todaysPrayerTimes["dhuhr"], "font_size": self.DefaultFontSize},
+                            {"name":"Asr", "time":todaysPrayerTimes["asr"],"font_size": self.DefaultFontSize},
+                            {"name":"Maghrib", "time":todaysPrayerTimes["magrib"],"font_size": self.DefaultFontSize},
+                            {"name":"Isha", "time":todaysPrayerTimes["isha"],"font_size": self.DefaultFontSize},
+                            {"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize}] # TEMP. TODO: add method to get prayer times from API
+
     
     def MainPageButtons(self):
         # nRows x 5Col grid
@@ -155,7 +171,7 @@ class AdhaanApp(QMainWindow):
         
         self.TimeWidgets = [{"name":"CurrentDate", "default_text":datetime.datetime.now().strftime("%d/%m/%Y"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize},
                         {"name":"CurrentTime", "default_text":datetime.datetime.now().strftime("%H:%M:%S"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":normalRowSpan, "col_span":maxColSpan, "font_size":self.DefaultLargeFontSize},
-                        {"name":"TimeUntilNextPrayer", "default_text": "Time Until Fujr: 2h 10m", "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize}]
+                        {"name":"TimeUntilNextPrayer", "default_text": "Time Until ?: ?h ?m", "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize}]
         
         # Might need this later, so leaving here
         # hoursTilNext = divmod(self.TimeTilNext.total_seconds(), 60**2) 

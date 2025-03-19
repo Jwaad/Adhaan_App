@@ -4,6 +4,9 @@
 #   increase amount of cols, to make ? icon smaller. Or change it's horizontal resizing policy
 #   Customise tool tip style, fonnt, fontsize etc
 #   CALCULATE LAST THIRD
+#
+#
+#
 #   LOW PRIORITY-----------------------
 #   Experiment with style: colours and bolding
 #   DOWNLOAD WHOLE REST OF MONTH TO MEM
@@ -52,6 +55,7 @@ class AdhaanApp(QMainWindow):
         self.memory = QSharedMemory("AdthaanAppHussain")
         if self.memory.attach():
             print("Application is already running!")
+            #QApplication.quit()
             sys.exit()  # Exit if the app is already running
         
         # Init window
@@ -60,9 +64,7 @@ class AdhaanApp(QMainWindow):
         self.setGeometry(1500, 300, self.WindowSize[0], self.WindowSize[1]) # x-position, y-position, width, height
         self.WinHeightAtPreviousResize = self.WindowSize[1]
         self.setWindowIcon(QIcon("icon.png"))
-        self.setStyleSheet("background-color: lightblue;")  # Example styling
-        self.setStyleSheet("text-color: red")
-        
+
         # Setup tray icon
         self.tray_icon = QSystemTrayIcon(self)
         self.tray_icon.setIcon(QIcon("icon.png"))  # Use a suitable icon file
@@ -93,7 +95,14 @@ class AdhaanApp(QMainWindow):
         self.DefaultLargeFontSize = 30
         self.DefaultTitleFontSize = 50
         self.DefaultFont = "Verdana"
-
+        
+        #Set style sheet
+        self.setStyleSheet("""
+                                background-color: #202A25; 
+                                color: #C4EBC8;        /* Dark text */
+                            """)
+        # Colour scheme : #202A25 #C4EBC8 #8E7C93 #D0A5C0 #F6C0D0
+        
         # Get initial prayer times
         self.DefaultAPI = "http://www.londonprayertimes.com/api/times/"
         self.APIKey = "17522509-896f-49b7-80c8-975c4be643b4"
@@ -230,7 +239,7 @@ class AdhaanApp(QMainWindow):
         datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow.strftime("%d") + tommorowsPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
         maghribToFujr = ( datetimeFujr - datetimeMaghrib)
         midnight = (datetimeMaghrib +  (maghribToFujr / 2) ).strftime("%H:%M")
-        print(timeNow, (datetimeMaghrib +  (maghribToFujr / 2) ))
+        #print(timeNow, (datetimeMaghrib +  (maghribToFujr / 2) ))
         
         #store prayer times in dict
         self.PrayerTimes = [{"name":"Fujr", "time":todaysPrayerTimes["fajr"], "font_size": self.DefaultFontSize},
@@ -390,7 +399,14 @@ class AdhaanApp(QMainWindow):
             self.WinHeightAtPreviousResize = new_size.height() 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    adhaanApp = AdhaanApp()
-    adhaanApp.show()
-    sys.exit(app.exec_())
+    
+    try:
+        app = QApplication(sys.argv)
+        adhaanApp = AdhaanApp()
+        adhaanApp.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)  # Exit if something else goes wrong
+        
+    

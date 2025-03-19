@@ -356,7 +356,7 @@ class AdhaanApp(QMainWindow):
                 firstThird = datetime.datetime.strptime(time["time"], "%H:%M")
                 infoIcon = createToolTip("First third: {}".format("12:00"))
                 infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
-                self.layout.addWidget(infoIcon, rows, 6, 1, 1)
+                self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
                 self.layout.setRowStretch(0, 0)
                 self.layout.setColumnStretch(0, 0)
                 self.AllWidgets["IshaToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
@@ -365,7 +365,7 @@ class AdhaanApp(QMainWindow):
                 firstThird = datetime.datetime.strptime(time["time"], "%H:%M")
                 infoIcon = createToolTip("Last third: {}".format("03:00"))
                 infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
-                self.layout.addWidget(infoIcon, rows, 6, 1, 1)
+                self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
                 self.layout.setRowStretch(0, 0)
                 self.layout.setColumnStretch(0, 0)
                 self.AllWidgets["MidnightToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}

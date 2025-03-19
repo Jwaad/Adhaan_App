@@ -3,13 +3,12 @@
 #   HIGH PRIOIRTY----------------------
 #   increase amount of cols, to make ? icon smaller. Or change it's horizontal resizing policy
 #   Customise tool tip style, fonnt, fontsize etc
-#   
+#   CALCULATE LAST THIRD
 #   LOW PRIORITY-----------------------
 #   Experiment with style: colours and bolding
 #   DOWNLOAD WHOLE REST OF MONTH TO MEM
 #   OPTIONS MENU FOR CUSTOMISATION
 #   OTHER PRAYER CALCS
-#   CALCULATE LAST THIRD
 #   Alarms / adthaans
 #   Reminder / ding ding
 #   Settings button
@@ -28,6 +27,7 @@
 # BUILD COMMAND: pyinstaller .\Main.py --i=icon.ico --windowed
 # ICON TO ICO: https://icoconvert.com/
 
+from doctest import debug
 import sys
 import datetime
 import requests
@@ -45,7 +45,7 @@ class AdhaanApp(QMainWindow):
         super().__init__()
         
         #Debug mode
-        self.DebugMode = True
+        self.DebugMode = False
         self.DebugTime = "2025-03-19 23:00:00"
         
         # Check if another instance is running
@@ -60,6 +60,8 @@ class AdhaanApp(QMainWindow):
         self.setGeometry(1500, 300, self.WindowSize[0], self.WindowSize[1]) # x-position, y-position, width, height
         self.WinHeightAtPreviousResize = self.WindowSize[1]
         self.setWindowIcon(QIcon("icon.png"))
+        self.setStyleSheet("background-color: lightblue;")  # Example styling
+        self.setStyleSheet("text-color: red")
         
         # Setup tray icon
         self.tray_icon = QSystemTrayIcon(self)
@@ -111,7 +113,6 @@ class AdhaanApp(QMainWindow):
         
         # Load Save data
         self.LoadSaveData()
-        
         
     
     def LoadSaveData(self):
@@ -176,10 +177,7 @@ class AdhaanApp(QMainWindow):
         if timeNow.strftime("%S") == "00":
             # TODO add a backup method incase the second gets skipped (low priority)
             self.UpdateTilUntilNextPrayer()
-        
-        
-        
-    
+
     def UpdateTilUntilNextPrayer(self):
         """Updates the QLabel with the current time."""
         #print("TODO: UpdateTilUntilNextPrayer")
@@ -188,9 +186,9 @@ class AdhaanApp(QMainWindow):
             timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
             
         for prayer in self.PrayerTimes:
-            prayerDatetime = datetime.datetime.strptime(datetime.datetime.now().strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
+            prayerDatetime = datetime.datetime.strptime(timeNow.strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
             if timeNow <= prayerDatetime:
-                timeTilNext = prayerDatetime - datetime.datetime.now() + datetime.timedelta(seconds=60)
+                timeTilNext = prayerDatetime - timeNow + datetime.timedelta(seconds=60)
                 formattedTimeTilNext = str(timeTilNext).split(":")
                 self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].setText("Time until {}: {}h {}m".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1]))
                 return
@@ -199,23 +197,27 @@ class AdhaanApp(QMainWindow):
         """
         Retrieves prayer times from API (currently hardcoded) and populates relevant instance variables. 
         """
+        timeNow = datetime.datetime.now()
+        if self.DebugMode == True:
+            timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
+        
         # Call API and get todays prayer times
-        year = datetime.datetime.now().strftime("%Y")
-        month = datetime.datetime.now().strftime("%m")
-        day = datetime.datetime.now().strftime("%d")
-        tomorrow =  (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%d")
-        response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year,month, self.APIKey))
+        year = timeNow.strftime("%Y")
+        month = timeNow.strftime("%m")
+        day = timeNow.strftime("%d")
+        tomorrow =  (timeNow + datetime.timedelta(days=1))
+        response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year, month, self.APIKey))
         apiResponse = response.json()
-        todaysPrayerTimes = apiResponse["times"][datetime.datetime.now().strftime("%Y-%m-%d")]
-        tommorowsPrayerTimes = apiResponse["times"][datetime.datetime.now().strftime("%Y-%m-%d")]
+        todaysPrayerTimes = apiResponse["times"][timeNow.strftime("%Y-%m-%d")]
+        tommorowsPrayerTimes = apiResponse["times"][tomorrow.strftime("%Y-%m-%d")]
         # print(response.status_code) # TODO handle error codes here
         
-        # Get islamic midnight time
+        # Get islamic midnight time -> NOTE: display today's fujr, but calculate midnight using tomorrow's fujr
         datetimeMaghrib = datetime.datetime.strptime(year + "-" + month + "-" + day + todaysPrayerTimes["magrib"], "%Y-%m-%d%H:%M")
-        datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow + tommorowsPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
+        datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow.strftime("%d") + tommorowsPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
         maghribToFujr = ( datetimeFujr - datetimeMaghrib)
-        print("maghrib:",datetimeMaghrib,"fujr:",datetimeFujr, "mag - faj:", maghribToFujr / 2)
         midnight = (datetimeMaghrib +  (maghribToFujr / 2) ).strftime("%H:%M")
+        print(timeNow, (datetimeMaghrib +  (maghribToFujr / 2) ))
         
         #store prayer times in dict
         self.PrayerTimes = [{"name":"Fujr", "time":todaysPrayerTimes["fajr"], "font_size": self.DefaultFontSize},
@@ -230,6 +232,9 @@ class AdhaanApp(QMainWindow):
         
         # Add info icon
         def createToolTip(toolTipText):
+            """
+            Creates a tool tip for the info icon.
+            """
             infoIcon = QLabel("❔", self)
             infoIcon.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
             infoIcon.setAlignment(Qt.AlignTop | Qt.AlignLeft )
@@ -244,9 +249,13 @@ class AdhaanApp(QMainWindow):
         normalColSpan = 1
         maxColSpan = 5
         
+        timeNow = datetime.datetime.now()
+        if self.DebugMode == True:
+            timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
+            
         standardSizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Ignored)
-        self.TimeWidgets = [{"name":"CurrentDate", "default_text":datetime.datetime.now().strftime("%d/%m/%Y"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize},
-                        {"name":"CurrentTime", "default_text":datetime.datetime.now().strftime("%H:%M:%S"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":normalRowSpan, "col_span":maxColSpan, "font_size":self.DefaultLargeFontSize},
+        self.TimeWidgets = [{"name":"CurrentDate", "default_text":timeNow.strftime("%d/%m/%Y"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize},
+                        {"name":"CurrentTime", "default_text":timeNow.strftime("%H:%M:%S"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":normalRowSpan, "col_span":maxColSpan, "font_size":self.DefaultLargeFontSize},
                         {"name":"TimeUntilNextPrayer", "default_text": "Time Until ?: ?h ?m", "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize}]
         
         # Populate time widgets
@@ -298,17 +307,42 @@ class AdhaanApp(QMainWindow):
                 # Calculate first third # TODO FINISH AND USE THIS CALCULATIOON
                 firstThird = datetime.datetime.strptime(time["time"], "%H:%M")
                 infoIcon = createToolTip("First third: {}".format("12:00"))
+                infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
                 self.layout.addWidget(infoIcon, rows, 6, 1, 1)
+                self.layout.setRowStretch(0, 0)
+                self.layout.setColumnStretch(0, 0)
                 self.AllWidgets["IshaToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
             if time["name"] == "Midnight":
                 # Calculate first third  # TODO FINISH AND USE THIS CALCULATIOON
                 firstThird = datetime.datetime.strptime(time["time"], "%H:%M")
                 infoIcon = createToolTip("Last third: {}".format("03:00"))
+                infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
                 self.layout.addWidget(infoIcon, rows, 6, 1, 1)
+                self.layout.setRowStretch(0, 0)
+                self.layout.setColumnStretch(0, 0)
                 self.AllWidgets["MidnightToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
 
             rows += normalRowSpan
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
+
+        if self.DebugMode == True:
+            def get_grid_dimensions(grid_layout):
+                max_row = 0
+                max_col = 0
+                for i in range(grid_layout.count()):  # Loop through all items
+                    row, col, row_span, col_span = grid_layout.getItemPosition(i)
+                    max_row = max(max_row, row + row_span)  # Get the highest row index
+                    max_col = max(max_col, col + col_span)  # Get the highest column index
+                return max_row, max_col
+            
+            rows, cols = get_grid_dimensions(self.layout)
+            # Add borders to the grid
+            for row in range(rows):
+                for col in range(cols):
+                    frame = QFrame()
+                    frame.setStyleSheet("border: 1px solid rgba(255, 0, 0, 30);")
+                    self.layout.addWidget(frame, row, col)
+                    #print("Added border to row {} and col {}".format(row, col))
 
         
     

@@ -136,8 +136,6 @@ class AdhaanApp(QMainWindow):
             
         self.setStyleSheet(StyleText)
         
-        
-        
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.MouseStartPos = event.globalPos()  # Store initial click position
@@ -155,7 +153,6 @@ class AdhaanApp(QMainWindow):
         try:
             with open('data.json', 'r') as f:
                 self.SaveData = json.loads(f.read())
-                self.setGeometry(self.SaveData["window_pos"][0],self.SaveData["window_pos"][1], self.SaveData["window_size"][0], self.SaveData["window_size"][1]) # x-position, y-position, width, height
         except FileNotFoundError:
             self.SaveData = {"window_pos": [1500, 300], "window_size": self.WindowSize}
             json.dumps(self.SaveData, ensure_ascii=False)
@@ -165,7 +162,9 @@ class AdhaanApp(QMainWindow):
         except:
             self.SaveData = {"window_pos": [1500, 300], "window_size": self.WindowSize}
             json.dumps(self.SaveData, ensure_ascii=False)
-            # Lazy but, idk if it will matter
+        finally:
+            self.setGeometry(self.SaveData["window_pos"][0],self.SaveData["window_pos"][1], self.SaveData["window_size"][0], self.SaveData["window_size"][1]) # x-position, y-position, width, height
+            #self.adjustSize()
 
     def SaveUserData(self):
         self.SaveData["window_pos"] = [self.pos().x(), self.pos().y()]
@@ -323,7 +322,7 @@ class AdhaanApp(QMainWindow):
         # Add seperating line
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
-        lineSizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        lineSizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         line.setSizePolicy(lineSizePolicy)
         line.setLineWidth(5)
         self.layout.addWidget(line, rows, 1, smallRowSpan, maxColSpan)
@@ -373,10 +372,9 @@ class AdhaanApp(QMainWindow):
             rows += normalRowSpan
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
 
-        
     
     def resizeEvent(self, event):
-
+            print("resize event triggered")
             new_size = event.size()
             stepSize = 20
             
@@ -389,19 +387,11 @@ class AdhaanApp(QMainWindow):
             # Update font sizes of each widget if applicable
             for key in self.AllWidgets.keys():
                 
-                # Qlabels with single widget
-                if len(self.AllWidgets[key]["Widgets"]) == 1:
-                    widget = self.AllWidgets[key]["Widgets"][0]
-
-                    if widget.__class__.__name__ == 'QLabel':
-                        widget.setFont(QFont(self.AllWidgets[key]["Font"], int(round(self.AllWidgets[key]["FontSize"] * self.TextScalar, 0))))
-                    continue
-                
-                # Qlabels with multiple widgets
                 for widget in self.AllWidgets[key]["Widgets"]:
                     if widget.__class__.__name__ == 'QLabel':
                         widget.setFont(QFont(self.AllWidgets[key]["Font"], int(round(self.AllWidgets[key]["FontSize"] * self.TextScalar, 0))))
-                
+                        widget.adjustSize()
+            
             self.WinHeightAtPreviousResize = new_size.height() 
 
 if __name__ == '__main__':

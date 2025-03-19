@@ -2,9 +2,9 @@
 # TODO: 
 #   HIGH PRIOIRTY----------------------
 #   increase amount of cols, to make ? icon smaller. Or change it's horizontal resizing policy
-#   Play around with colours
 #   Customise tool tip style, fonnt, fontsize etc
 #   CALCULATE LAST THIRD
+#   CALCULATE First THIRD
 #
 #   LOW PRIORITY-----------------------
 #   Experiment with style: colours and bolding
@@ -24,6 +24,7 @@
 #   Windows + arrow key makes UI black. Not sure why, maybe due to resizing code?
 #   Dist version doesn't run in tray
 #   Rare cases seconds can get skipped -> timer not synced with system time.
+#   Content auto resizes on start up, different to what you save as
 #
 #   Known Issues------------------------
 #   Quitting from system tray, doesnt cause app to open into system tray next start
@@ -52,7 +53,7 @@ class AdhaanApp(QMainWindow):
         super().__init__()
         
         #Debug mode
-        self.DebugMode = True
+        self.DebugMode = False
         self.DebugTime = "2025-03-19 23:00:00"
         
         # Check if another instance is running
@@ -164,8 +165,42 @@ class AdhaanApp(QMainWindow):
             json.dumps(self.SaveData, ensure_ascii=False)
         finally:
             self.setGeometry(self.SaveData["window_pos"][0],self.SaveData["window_pos"][1], self.SaveData["window_size"][0], self.SaveData["window_size"][1]) # x-position, y-position, width, height
-            #self.adjustSize()
+            self.FitWindowToContentWidth()
+            #self.setGeometry(self.SaveData["window_pos"][0],self.SaveData["window_pos"][1], self.SaveData["window_size"][0], self.SaveData["window_size"][1]) # x-position, y-position, width, height
+            
+    
+    def FitWindowToContentWidth(self):
+        print("fitting width to content")
+        # Dictionary to keep track of the total width of each row
+        row_widths = {}
 
+        # Loop through all items in the layout
+        for i in range(self.layout.count()):
+            # Get the widget in this layout item
+            item = self.layout.itemAt(i)
+
+            # If it's a widget (and not a spacer or stretch)
+            if item and item.widget():
+                widget = item.widget()
+
+                # Get the row and column position of the item
+                row= self.layout.getItemPosition(i)[0]
+
+                # Add the widget's width to the total width of its row
+                widget_width = widget.sizeHint().width()
+                #print("Content in row {}, ind {} is {} / {}".format(row, i, widget.minimumSizeHint().width(), widget.sizeHint().width()))
+
+                # add to correct row total width
+                if row not in row_widths:
+                    row_widths[row] = 0
+                row_widths[row] += widget_width  # Sum up widths for this row
+        
+        # Get the maximum width of any row
+        max_width = max(row_widths.values(), default=0)
+        self.setMinimumWidth(0)
+        self.resize(max_width, self.height())  # Resize width to content, but keep current height
+        
+        
     def SaveUserData(self):
         self.SaveData["window_pos"] = [self.pos().x(), self.pos().y()]
         self.SaveData["window_size"] = [self.size().width(), self.size().height()]
@@ -270,7 +305,7 @@ class AdhaanApp(QMainWindow):
             """
             Creates a tool tip for the info icon.
             """
-            infoIcon = QLabel("❔", self)
+            infoIcon = QLabel("❔", self) #
             infoIcon.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
             infoIcon.setAlignment(Qt.AlignTop | Qt.AlignLeft )
             infoIcon.setSizePolicy(standardSizePolicy)
@@ -356,8 +391,8 @@ class AdhaanApp(QMainWindow):
                 infoIcon = createToolTip("First third: {}".format("12:00"))
                 infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
-                self.layout.setRowStretch(0, 0)
-                self.layout.setColumnStretch(0, 0)
+                #self.layout.setRowStretch(0, 0)
+                #self.layout.setColumnStretch(0, 0)
                 self.AllWidgets["IshaToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
             if time["name"] == "Midnight":
                 # Calculate first third  # TODO FINISH AND USE THIS CALCULATIOON
@@ -365,8 +400,8 @@ class AdhaanApp(QMainWindow):
                 infoIcon = createToolTip("Last third: {}".format("03:00"))
                 infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
-                self.layout.setRowStretch(0, 0)
-                self.layout.setColumnStretch(0, 0)
+                #self.layout.setRowStretch(0, 0)
+                #self.layout.setColumnStretch(0, 0)
                 self.AllWidgets["MidnightToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
 
             rows += normalRowSpan
@@ -374,10 +409,8 @@ class AdhaanApp(QMainWindow):
 
     
     def resizeEvent(self, event):
-            print("resize event triggered")
             new_size = event.size()
-            stepSize = 20
-            
+            stepSize = 10
             if abs(self.WinHeightAtPreviousResize - new_size.height()) < stepSize:
                 return
             
@@ -390,7 +423,6 @@ class AdhaanApp(QMainWindow):
                 for widget in self.AllWidgets[key]["Widgets"]:
                     if widget.__class__.__name__ == 'QLabel':
                         widget.setFont(QFont(self.AllWidgets[key]["Font"], int(round(self.AllWidgets[key]["FontSize"] * self.TextScalar, 0))))
-                        widget.adjustSize()
             
             self.WinHeightAtPreviousResize = new_size.height() 
 

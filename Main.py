@@ -113,7 +113,20 @@ class AdhaanApp(QMainWindow):
         
         # Load Save data
         self.LoadSaveData()
+        self.MouseStartPos = None
         
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.MouseStartPos = event.globalPos()  # Store initial click position
+
+    def mouseMoveEvent(self, event):
+        if self.MouseStartPos:
+            delta = event.globalPos() - self.MouseStartPos  # Calculate movement
+            self.move(self.x() + delta.x(), self.y() + delta.y())  # Move window
+            self.MouseStartPos = event.globalPos()  # Update position
+
+    def mouseReleaseEvent(self, event):
+        self.MouseStartPos = None  # Reset when mouse is released
     
     def LoadSaveData(self):
         try:

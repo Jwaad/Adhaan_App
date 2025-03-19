@@ -2,10 +2,9 @@
 # TODO: 
 #   HIGH PRIOIRTY----------------------
 #   increase amount of cols, to make ? icon smaller. Or change it's horizontal resizing policy
+#   Play around with colours
 #   Customise tool tip style, fonnt, fontsize etc
 #   CALCULATE LAST THIRD
-#
-#
 #
 #   LOW PRIORITY-----------------------
 #   Experiment with style: colours and bolding
@@ -25,6 +24,10 @@
 #   Windows + arrow key makes UI black. Not sure why, maybe due to resizing code?
 #   Dist version doesn't run in tray
 #   Rare cases seconds can get skipped -> timer not synced with system time.
+#
+#   Known Issues------------------------
+#   Quitting from system tray, doesnt cause app to open into system tray next start
+#
 
 
 # BUILD COMMAND: pyinstaller .\Main.py --i=icon.ico --windowed
@@ -35,6 +38,7 @@ import sys
 import datetime
 import requests
 import json
+import signal
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -400,6 +404,15 @@ class AdhaanApp(QMainWindow):
 
 if __name__ == '__main__':
     
+    def handle_keyboard_interrupt(signal, frame):
+        print("Keyboard Interrupt. Application closed.")
+        adhaanApp.close()
+        QApplication.quit()  
+        sys.exit(0)
+    
+    # Set up signal handler to catch keyboard interrupt
+    signal.signal(signal.SIGINT, handle_keyboard_interrupt)
+
     try:
         app = QApplication(sys.argv)
         adhaanApp = AdhaanApp()

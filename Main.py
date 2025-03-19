@@ -101,11 +101,7 @@ class AdhaanApp(QMainWindow):
         self.DefaultFont = "Verdana"
         
         #Set style sheet
-        self.setStyleSheet("""
-                                background-color: #202A25; 
-                                color: #C4EBC8;        /* Dark text */
-                            """)
-        # Colour scheme : #202A25 #C4EBC8 #8E7C93 #D0A5C0 #F6C0D0
+        self.SetDefaultStyleSheet()
         
         # Get initial prayer times
         self.DefaultAPI = "http://www.londonprayertimes.com/api/times/"
@@ -127,6 +123,13 @@ class AdhaanApp(QMainWindow):
         # Load Save data
         self.LoadSaveData()
         self.MouseStartPos = None
+    
+    def SetDefaultStyleSheet(self):
+        self.setStyleSheet("""
+                                    background-color: #202A25; 
+                                    color: #C4EBC8;        /* Dark text */
+                                """)
+            # Colour scheme : #202A25 #C4EBC8 #8E7C93 #D0A5C0 #F6C0D0
         
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -280,9 +283,19 @@ class AdhaanApp(QMainWindow):
             timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
             
         standardSizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Ignored)
-        self.TimeWidgets = [{"name":"CurrentDate", "default_text":timeNow.strftime("%d/%m/%Y"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize},
-                        {"name":"CurrentTime", "default_text":timeNow.strftime("%H:%M:%S"), "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":normalRowSpan, "col_span":maxColSpan, "font_size":self.DefaultLargeFontSize},
-                        {"name":"TimeUntilNextPrayer", "default_text": "Time Until ?: ?h ?m", "type":QLabel, "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan, "col_span":maxColSpan, "font_size":self.DefaultFontSize}]
+        self.TimeWidgets = [
+            #CurrentDate #202A25 #C4EBC8 #8E7C93 #D0A5C0 #F6C0D0
+            {"name":"CurrentDate", "default_text":timeNow.strftime("%d/%m/%Y"), "type":QLabel,
+             "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan,
+             "col_span":maxColSpan, "font_size":self.DefaultFontSize},
+            #CurrentTime
+            {"name":"CurrentTime", "default_text":timeNow.strftime("%H:%M:%S"), "type":QLabel,
+             "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":normalRowSpan,
+             "col_span":maxColSpan, "font_size":self.DefaultLargeFontSize, "font_color":"#F6C0D0"},
+            #TimeUntilNextPrayer
+            {"name":"TimeUntilNextPrayer", "default_text": "Time Until ?: ?h ?m", "type":QLabel,
+             "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan,
+             "col_span":maxColSpan, "font_size":self.DefaultFontSize}]
         
         # Populate time widgets
         rows = 1
@@ -292,6 +305,8 @@ class AdhaanApp(QMainWindow):
             label.setSizePolicy(widget["size_policy"])
             if widget["type"] == QLabel:
                 label.setAlignment(widget["alignment"])
+                if "font_color" in widget:
+                    label.setStyleSheet("color: " + widget["font_color"])
             elif widget["type"] == QFrame:
                 line.setLineWidth(widget["line_width"])
             self.layout.addWidget(label, rows, 1, widget["row_span"], widget["col_span"])
@@ -392,7 +407,6 @@ class AdhaanApp(QMainWindow):
 
                     if widget.__class__.__name__ == 'QLabel':
                         widget.setFont(QFont(self.AllWidgets[key]["Font"], int(round(self.AllWidgets[key]["FontSize"] * self.TextScalar, 0))))
-                    
                     continue
                 
                 # Qlabels with multiple widgets

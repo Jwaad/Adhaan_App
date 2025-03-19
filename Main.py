@@ -22,6 +22,7 @@
 #   With multiple monitors, might start on a screen that no longer exists. I.E. starts off screen.add()
 #   Windows + arrow key makes UI black. Not sure why, maybe due to resizing code?
 #   Dist version doesn't run in tray
+#   Rare cases seconds can get skipped -> timer not synced with system time.
 
 
 # BUILD COMMAND: pyinstaller .\Main.py --i=icon.ico --windowed
@@ -42,6 +43,10 @@ class AdhaanApp(QMainWindow):
         """
         # Init QWidgets
         super().__init__()
+        
+        #Debug mode
+        self.DebugMode = True
+        self.DebugTime = "2025-03-19 23:00:00"
         
         # Check if another instance is running
         self.memory = QSharedMemory("AdthaanAppHussain")
@@ -107,10 +112,7 @@ class AdhaanApp(QMainWindow):
         # Load Save data
         self.LoadSaveData()
         
-        # Attach closing events to close
-        #self.quit.triggered.connect(self.close)
         
-        #self.SaveData = {"window_pos": [1500, 300], "window_size": self.WindowSize}
     
     def LoadSaveData(self):
         try:
@@ -165,18 +167,26 @@ class AdhaanApp(QMainWindow):
     def UpdateCurrentTime(self):
         """Updates the QLabel with the current time."""
         timeNow = datetime.datetime.now()
+        if self.DebugMode == True:
+            timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
+            
         self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M:%S"))
-        
+            
         # Update prayer time each minute
         if timeNow.strftime("%S") == "00":
             # TODO add a backup method incase the second gets skipped (low priority)
             self.UpdateTilUntilNextPrayer()
+        
+        
         
     
     def UpdateTilUntilNextPrayer(self):
         """Updates the QLabel with the current time."""
         #print("TODO: UpdateTilUntilNextPrayer")
         timeNow = datetime.datetime.now()
+        if self.DebugMode == True:
+            timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
+            
         for prayer in self.PrayerTimes:
             prayerDatetime = datetime.datetime.strptime(datetime.datetime.now().strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
             if timeNow <= prayerDatetime:
@@ -193,15 +203,19 @@ class AdhaanApp(QMainWindow):
         year = datetime.datetime.now().strftime("%Y")
         month = datetime.datetime.now().strftime("%m")
         day = datetime.datetime.now().strftime("%d")
+        tomorrow =  (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%d")
         response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year,month, self.APIKey))
         apiResponse = response.json()
         todaysPrayerTimes = apiResponse["times"][datetime.datetime.now().strftime("%Y-%m-%d")]
+        tommorowsPrayerTimes = apiResponse["times"][datetime.datetime.now().strftime("%Y-%m-%d")]
         # print(response.status_code) # TODO handle error codes here
         
         # Get islamic midnight time
         datetimeMaghrib = datetime.datetime.strptime(year + "-" + month + "-" + day + todaysPrayerTimes["magrib"], "%Y-%m-%d%H:%M")
-        datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + day + todaysPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
-        midnight = (datetimeMaghrib + (datetimeFujr - datetimeMaghrib) / 2).strftime("%H:%M")
+        datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow + tommorowsPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
+        maghribToFujr = ( datetimeFujr - datetimeMaghrib)
+        print("maghrib:",datetimeMaghrib,"fujr:",datetimeFujr, "mag - faj:", maghribToFujr / 2)
+        midnight = (datetimeMaghrib +  (maghribToFujr / 2) ).strftime("%H:%M")
         
         #store prayer times in dict
         self.PrayerTimes = [{"name":"Fujr", "time":todaysPrayerTimes["fajr"], "font_size": self.DefaultFontSize},

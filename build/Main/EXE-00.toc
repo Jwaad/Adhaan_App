@@ -70,6 +70,9 @@
   ('pyi_rth_pkgutil',
    'C:\\Users\\jwaad\\scoop\\persist\\python\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgutil.py',
    'PYSOURCE'),
+  ('pyi_rth_multiprocessing',
+   'C:\\Users\\jwaad\\scoop\\persist\\python\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_multiprocessing.py',
+   'PYSOURCE'),
   ('Main',
    'C:\\Users\\jwaad\\Desktop\\Work\\Coding\\Projects\\Adhaan App '
    '2.0\\Adhaan_App\\Main.py',
@@ -77,7 +80,7 @@
  [],
  False,
  False,
- 1742265035,
+ 1742371463,
  [('runw.exe',
    'C:\\Users\\jwaad\\scoop\\apps\\python\\current\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',
    'EXECUTABLE')],

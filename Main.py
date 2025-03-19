@@ -52,7 +52,7 @@ class AdhaanApp(QMainWindow):
         super().__init__()
         
         #Debug mode
-        self.DebugMode = False
+        self.DebugMode = True
         self.DebugTime = "2025-03-19 23:00:00"
         
         # Check if another instance is running
@@ -125,11 +125,18 @@ class AdhaanApp(QMainWindow):
         self.MouseStartPos = None
     
     def SetDefaultStyleSheet(self):
-        self.setStyleSheet("""
-                                    background-color: #202A25; 
-                                    color: #C4EBC8;        /* Dark text */
-                                """)
-            # Colour scheme : #202A25 #C4EBC8 #8E7C93 #D0A5C0 #F6C0D0
+        # Colour scheme : #202A25 #C4EBC8 #8E7C93 #D0A5C0 #F6C0D0
+        StyleText = """
+                        background-color: #202A25; 
+                        color: #C4EBC8;        /* Dark text */
+                    """
+                    
+        if self.DebugMode:
+            StyleText += "\n border: 1px solid rgba(255, 0, 0, 30);"
+            
+        self.setStyleSheet(StyleText)
+        
+        
         
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -365,25 +372,6 @@ class AdhaanApp(QMainWindow):
 
             rows += normalRowSpan
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
-
-        if self.DebugMode == True:
-            def get_grid_dimensions(grid_layout):
-                max_row = 0
-                max_col = 0
-                for i in range(grid_layout.count()):  # Loop through all items
-                    row, col, row_span, col_span = grid_layout.getItemPosition(i)
-                    max_row = max(max_row, row + row_span)  # Get the highest row index
-                    max_col = max(max_col, col + col_span)  # Get the highest column index
-                return max_row, max_col
-            
-            rows, cols = get_grid_dimensions(self.layout)
-            # Add borders to the grid
-            for row in range(rows):
-                for col in range(cols):
-                    frame = QFrame()
-                    frame.setStyleSheet("border: 1px solid rgba(255, 0, 0, 30);")
-                    self.layout.addWidget(frame, row, col)
-                    #print("Added border to row {} and col {}".format(row, col))
 
         
     

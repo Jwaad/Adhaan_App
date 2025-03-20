@@ -200,7 +200,7 @@ class AdhaanApp(QMainWindow):
             
     
     def FitWindowToContentWidth(self):
-        print("fitting width to content")
+        #print("fitting width to content")
         # Dictionary to keep track of the total width of each row
         row_widths = {}
 

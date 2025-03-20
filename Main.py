@@ -1,31 +1,30 @@
 # Written by Jwaad Hussain 2025
 # TODO: 
 #   HIGH PRIOIRTY----------------------
-#   CALCULATE LAST THIRD
-#   CALCULATE First THIRD
-#   Next day after midnight
-#   On next day, add small +1 icon next to date, until 12am
+#   Next day after midnight (On next day, add small +1 icon next to date, until 12am)
+#   Transparent window
+#   Setting page, multiple customisations
+#   Alarms / adthaans
 #
 #   LOW PRIORITY-----------------------
 #   Experiment with style: colours and bolding
 #   DOWNLOAD WHOLE REST OF MONTH TO MEM
 #   OPTIONS MENU FOR CUSTOMISATION
-#   OTHER PRAYER CALCS
-#   Alarms / adthaans
+#   OTHER PRAYER CALCS (specifically kenya calc)
 #   Reminder / ding ding
 #   Settings button
 #   pin to top
 #   prayer time popups
 #   Tray info, mins remaing / colour for urgency
-#   increase amount of cols, to make ? icon smaller. Or change it's horizontal resizing policy
+#   have alternative option
+#   Rare cases seconds can get skipped -> timer not synced with system time.
 #
 #   Known Bugs--------------------------
-#   strange horizontal minimizing behaviour
+#   strange horizontal minimizing behaviour Seems to be a windows thing, cant corner drag, horizontal length stuck to len at drag
 #   With multiple monitors, might start on a screen that no longer exists. I.E. starts off screen.add()
-#   Windows + arrow key makes UI black. Not sure why, maybe due to resizing code?
-#   Dist version doesn't run in tray
-#   Rare cases seconds can get skipped -> timer not synced with system time.
-#   Content auto resizes on start up, different to what you save as
+#   Windows + arrow key makes UI black. Not sure why, maybe due to resizing code? (happened once and not again)
+#   Dist version doesn't run in tray (Solved itself)
+#   increase amount of cols, to make ? icon smaller. Or change it's horizontal resizing policy (only happens when UI small)
 #
 #   Known Issues------------------------
 #   Quitting from system tray, doesnt cause app to open into system tray next start

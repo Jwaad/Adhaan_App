@@ -31,7 +31,8 @@
 #   Quitting from system tray, doesnt cause app to open into system tray next start
 
 
-# BUILD COMMAND: pyinstaller .\Main.py --i=icon.ico --windowed
+# BUILD COMMAND: 
+# pyinstaller .\Main.py --clean --i=./AdthaanAppIcons/icon.ico --windowed --add-data="./AdthaanAppIcons/*;AdthaanAppIcons/." 
 # ICON TO ICO: https://icoconvert.com/
 
 from doctest import debug
@@ -73,11 +74,15 @@ class AdhaanApp(QMainWindow):
         self.WindowSize = (300, 500) # (width, height)
         self.setGeometry(1500, 300, self.WindowSize[0], self.WindowSize[1]) # x-position, y-position, width, height
         self.WinHeightAtPreviousResize = self.WindowSize[1]
-        self.setWindowIcon(QIcon("icon.png"))
+        try:
+            iconPath = sys._MEIPASS + "./AdthaanAppIcons/icon.png"
+        except Exception:
+            iconPath = "./AdthaanAppIcons/icon.png"
+        self.setWindowIcon(QIcon(iconPath))
 
         # Setup tray icon
         self.tray_icon = QSystemTrayIcon(self)
-        self.tray_icon.setIcon(QIcon("icon.png"))  # Use a suitable icon file
+        self.tray_icon.setIcon(QIcon(iconPath))
         self.tray_icon.setVisible(False)
         tray_menu = QMenu()
         restore_action = QAction("Restore", self)

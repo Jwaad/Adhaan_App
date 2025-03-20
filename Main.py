@@ -1,10 +1,11 @@
 # Written by Jwaad Hussain 2025
 # TODO: 
 #   HIGH PRIOIRTY----------------------
-#   increase amount of cols, to make ? icon smaller. Or change it's horizontal resizing policy
 #   Customise tool tip style, fonnt, fontsize etc
 #   CALCULATE LAST THIRD
 #   CALCULATE First THIRD
+#   Next day after midnight
+#   On next day, add small +1 icon next to date, until 12am
 #
 #   LOW PRIORITY-----------------------
 #   Experiment with style: colours and bolding
@@ -17,6 +18,7 @@
 #   pin to top
 #   prayer time popups
 #   Tray info, mins remaing / colour for urgency
+#   increase amount of cols, to make ? icon smaller. Or change it's horizontal resizing policy
 #
 #   Known Bugs--------------------------
 #   strange horizontal minimizing behaviour
@@ -28,7 +30,6 @@
 #
 #   Known Issues------------------------
 #   Quitting from system tray, doesnt cause app to open into system tray next start
-#
 
 
 # BUILD COMMAND: pyinstaller .\Main.py --i=icon.ico --windowed
@@ -102,6 +103,19 @@ class AdhaanApp(QMainWindow):
         self.DefaultFont = "Verdana"
         
         #Set style sheet
+        self.ColourSchemes ={"Monokai":{"name":"Monokai", "background":"#202A25", "text":"#C4EBC8",
+                            "accent1":"#F6C0D0", "accent2":"#D0A5C0", "accent3":"#8E7C93"},
+                            
+                            "TrafficLight":{"name":"TrafficLight", "background":"#264653", "text":"#e76f51",
+                            "accent1":"#e9c46a", "accent2":"#f4a261", "accent3":"#2a9d8f"},
+                            
+                            "GreyGreen":{"name":"GreyGreen", "background":"#dad7cd", "text":"#344e41",
+                            "accent1":"#588157", "accent2":"#3a5a40", "accent3":"#a3b18a"},
+                            
+                            "PurplePink":{"name":"PurplePink", "background":"#231942", "text":"#e0b1cb",
+                            "accent1":"#9f86c0", "accent2":"#be95c4", "accent3":"#5e548e"},
+                            }
+        self.ColourScheme = self.ColourSchemes["TrafficLight"]
         self.SetDefaultStyleSheet()
         
         # Get initial prayer times
@@ -128,10 +142,10 @@ class AdhaanApp(QMainWindow):
     def SetDefaultStyleSheet(self):
         # Colour scheme : #202A25 #C4EBC8 #8E7C93 #D0A5C0 #F6C0D0
         StyleText = """
-                        background-color: #202A25; 
-                        color: #C4EBC8;        /* Dark text */
-                    """
-                    
+                        background-color: {}; 
+                        color: {};        /* Dark text */
+                    """.format(self.ColourScheme["background"], self.ColourScheme["text"])
+
         if self.DebugMode:
             StyleText += "\n border: 1px solid rgba(255, 0, 0, 30);"
             
@@ -332,7 +346,7 @@ class AdhaanApp(QMainWindow):
             #CurrentTime
             {"name":"CurrentTime", "default_text":timeNow.strftime("%H:%M:%S"), "type":QLabel,
              "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":normalRowSpan,
-             "col_span":maxColSpan, "font_size":self.DefaultLargeFontSize, "font_color":"#F6C0D0"},
+             "col_span":maxColSpan, "font_size":self.DefaultLargeFontSize, "font_color":"{}".format(self.ColourScheme["accent1"])},
             #TimeUntilNextPrayer
             {"name":"TimeUntilNextPrayer", "default_text": "Time Until ?: ?h ?m", "type":QLabel,
              "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan,
@@ -390,18 +404,16 @@ class AdhaanApp(QMainWindow):
                 firstThird = datetime.datetime.strptime(time["time"], "%H:%M")
                 infoIcon = createToolTip("First third: {}".format("12:00"))
                 infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
+                self.SetToolTipStyleSheet(infoIcon)
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
-                #self.layout.setRowStretch(0, 0)
-                #self.layout.setColumnStretch(0, 0)
                 self.AllWidgets["IshaToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
             if time["name"] == "Midnight":
                 # Calculate first third  # TODO FINISH AND USE THIS CALCULATIOON
-                firstThird = datetime.datetime.strptime(time["time"], "%H:%M")
+                lastThird = datetime.datetime.strptime(time["time"], "%H:%M")
                 infoIcon = createToolTip("Last third: {}".format("03:00"))
                 infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
+                self.SetToolTipStyleSheet(infoIcon)
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
-                #self.layout.setRowStretch(0, 0)
-                #self.layout.setColumnStretch(0, 0)
                 self.AllWidgets["MidnightToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
 
             rows += normalRowSpan

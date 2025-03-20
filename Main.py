@@ -285,7 +285,7 @@ class AdhaanApp(QMainWindow):
         if self.DebugMode == True:
             timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
             
-        for prayer in self.PrayerTimes:
+        for prayer in self.PrayerTimes.values():
             prayerDatetime = datetime.datetime.strptime(timeNow.strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
             if timeNow <= prayerDatetime:
                 timeTilNext = prayerDatetime - timeNow + datetime.timedelta(seconds=60)
@@ -320,13 +320,13 @@ class AdhaanApp(QMainWindow):
         #print(timeNow, (datetimeMaghrib +  (maghribToFujr / 2) ))
         
         #store prayer times in dict
-        self.PrayerTimes = [{"name":"Fujr", "time":todaysPrayerTimes["fajr"], "font_size": self.DefaultFontSize},
-                            {"name":"Sunrise", "time":todaysPrayerTimes["sunrise"], "font_size": self.DefaultFontSize},
-                            {"name":"Dhuhr", "time":todaysPrayerTimes["dhuhr"], "font_size": self.DefaultFontSize},
-                            {"name":"Asr", "time":todaysPrayerTimes["asr"],"font_size": self.DefaultFontSize},
-                            {"name":"Maghrib", "time":todaysPrayerTimes["magrib"],"font_size": self.DefaultFontSize},
-                            {"name":"Isha", "time":todaysPrayerTimes["isha"],"font_size": self.DefaultFontSize},
-                            {"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize}] # TEMP. TODO: add method to get prayer times from API
+        self.PrayerTimes = {"Fajr":{"name":"Fujr", "time":todaysPrayerTimes["fajr"], "font_size": self.DefaultFontSize},
+                            "Sunrise":{"name":"Sunrise", "time":todaysPrayerTimes["sunrise"], "font_size": self.DefaultFontSize},
+                            "Dhuhr":{"name":"Dhuhr", "time":todaysPrayerTimes["dhuhr"], "font_size": self.DefaultFontSize},
+                            "Asr":{"name":"Asr", "time":todaysPrayerTimes["asr"],"font_size": self.DefaultFontSize},
+                            "Maghrib":{"name":"Maghrib", "time":todaysPrayerTimes["magrib"],"font_size": self.DefaultFontSize},
+                            "Isha":{"name":"Isha", "time":todaysPrayerTimes["isha"],"font_size": self.DefaultFontSize},
+                            "Midnight":{"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize}}
 
     def MainPageButtons(self):
         
@@ -395,7 +395,7 @@ class AdhaanApp(QMainWindow):
         rows += smallRowSpan
 
         # Populate Prayer times
-        for time in self.PrayerTimes:
+        for time in self.PrayerTimes.values():
             prayerName = QLabel(time["name"], self)
             prayerName.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
             prayerName.setAlignment(Qt.AlignRight)

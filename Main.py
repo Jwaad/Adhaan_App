@@ -1,7 +1,6 @@
 # Written by Jwaad Hussain 2025
 # TODO: 
 #   HIGH PRIOIRTY----------------------
-#   Customise tool tip style, fonnt, fontsize etc
 #   CALCULATE LAST THIRD
 #   CALCULATE First THIRD
 #   Next day after midnight

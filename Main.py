@@ -55,6 +55,11 @@ class AdhaanApp(QMainWindow):
         #Debug mode
         self.DebugMode = False
         self.DebugTime = "2025-03-19 23:00:00"
+        self.PreviousMin = datetime.datetime.now().strftime("%M")
+        if self.DebugMode == True:
+            print("Debug mode enabled")
+            self.PreviousMin = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S").strftime("%M")
+            
         
         # Check if another instance is running
         self.memory = QSharedMemory("AdthaanAppHussain")
@@ -277,9 +282,10 @@ class AdhaanApp(QMainWindow):
         if timeNow > datetime.datetime.strptime(self.PrayerTimes["Midnight"]["time"], "%H:%M"): 
             print("past midnight")   
         # Update prayer time each minute
-        if timeNow.strftime("%S") == "00":
-            # TODO add a backup method incase the second gets skipped (low priority)
+        minNow = timeNow.strftime("%M")
+        if minNow != self.PreviousMin:
             self.UpdateTilUntilNextPrayer()
+            self.PreviousMin = minNow
 
     def UpdateTilUntilNextPrayer(self):
         """Updates the QLabel with the current time."""

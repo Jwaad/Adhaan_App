@@ -4,7 +4,7 @@
  False,
  True,
  ['C:\\Users\\jwaad\\Desktop\\Work\\Coding\\Projects\\Adhaan App '
-  '2.0\\Adhaan_App\\icon.ico'],
+  '2.0\\Adhaan_App\\AdthaanAppIcons\\icon.ico'],
  None,
  False,
  False,
@@ -80,7 +80,7 @@
  [],
  False,
  False,
- 1742371463,
+ 1742437602,
  [('runw.exe',
    'C:\\Users\\jwaad\\scoop\\apps\\python\\current\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',
    'EXECUTABLE')],

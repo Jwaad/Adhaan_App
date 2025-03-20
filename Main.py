@@ -150,6 +150,23 @@ class AdhaanApp(QMainWindow):
             StyleText += "\n border: 1px solid rgba(255, 0, 0, 30);"
             
         self.setStyleSheet(StyleText)
+    
+    def SetToolTipStyleSheet(self, Widget):  
+        """
+        Sets the style sheet for tooltips.
+        """
+        Widget.setStyleSheet(f"""
+                                QLabel {{
+                                    color: {self.ColourScheme["accent2"]}; /* This is currently redundant, as ? icon is white only */
+                                }}
+                                QToolTip {{
+                                    color: {self.ColourScheme["text"]}; 
+                                    background-color: {self.ColourScheme["background"]}; 
+                                    border: 1px solid {self.ColourScheme["accent1"]};
+                                    border-radius: 4px;
+                                    font: {self.DefaultFontSize}px {self.DefaultFont};
+                                }}
+                            """)
         
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:

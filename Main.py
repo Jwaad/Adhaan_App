@@ -124,7 +124,8 @@ class AdhaanApp(QMainWindow):
                             "accent1":"#9f86c0", "accent2":"#be95c4", "accent3":"#5e548e"},
                             }
         self.ColourScheme = self.ColourSchemes["TrafficLight"]
-        self.SetDefaultStyleSheet()
+        self.setWindowOpacity(1)
+        self.SetDefaultStyleSheet()        
         
         # Get initial prayer times
         self.DefaultAPI = "http://www.londonprayertimes.com/api/times/"

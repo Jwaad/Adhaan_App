@@ -272,7 +272,10 @@ class AdhaanApp(QMainWindow):
             timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
             
         self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M:%S"))
-            
+        
+        #NOTE: assumes self.prayerTimes["midnight"] is set
+        if timeNow > datetime.datetime.strptime(self.PrayerTimes["Midnight"]["time"], "%H:%M"): 
+            print("past midnight")   
         # Update prayer time each minute
         if timeNow.strftime("%S") == "00":
             # TODO add a backup method incase the second gets skipped (low priority)
@@ -420,7 +423,7 @@ class AdhaanApp(QMainWindow):
                 firstThird = datetime.datetime.strptime(time["time"], "%H:%M")
                 infoIcon = createToolTip("First third: {}".format("12:00"))
                 infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
-                self.SetToolTipStyleSheet(infoIcon)
+                self.SetToolTipStyleSheet(infoIcon) # TODO combine with createToolTip
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
                 self.AllWidgets["IshaToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
             if time["name"] == "Midnight":
@@ -435,7 +438,9 @@ class AdhaanApp(QMainWindow):
             rows += normalRowSpan
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
 
-    
+    #maghribToFujr = ( datetimeFujr - datetimeMaghrib)
+    #midnight = (datetimeMaghrib +  (maghribToFujr / 2) ).strftime("%H:%M")
+        
     def resizeEvent(self, event):
             new_size = event.size()
             stepSize = 10

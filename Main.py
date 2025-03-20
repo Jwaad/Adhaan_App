@@ -279,8 +279,10 @@ class AdhaanApp(QMainWindow):
         self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M:%S"))
         
         #NOTE: assumes self.prayerTimes["midnight"] is set
-        if timeNow > datetime.datetime.strptime(self.PrayerTimes["Midnight"]["time"], "%H:%M"): 
-            print("past midnight")   
+        #if timeNow > datetime.datetime.strptime(self.PrayerTimes["Midnight"]["time"], "%H:%M"): 
+        #    print("past midnight")   
+        # TODO add some code to +1 to day here
+        
         # Update prayer time each minute
         minNow = timeNow.strftime("%M")
         if minNow != self.PreviousMin:

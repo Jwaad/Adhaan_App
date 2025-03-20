@@ -168,7 +168,7 @@ class AdhaanApp(QMainWindow):
                                     background-color: {self.ColourScheme["background"]}; 
                                     border: 1px solid {self.ColourScheme["accent1"]};
                                     border-radius: 4px;
-                                    font: {self.DefaultFontSize}px {self.DefaultFont};
+                                    font: {self.DefaultFontSize}pt {self.DefaultFont};
                                 }}
                             """)
         
@@ -201,8 +201,6 @@ class AdhaanApp(QMainWindow):
         finally:
             self.setGeometry(self.SaveData["window_pos"][0],self.SaveData["window_pos"][1], self.SaveData["window_size"][0], self.SaveData["window_size"][1]) # x-position, y-position, width, height
             self.FitWindowToContentWidth()
-            #self.setGeometry(self.SaveData["window_pos"][0],self.SaveData["window_pos"][1], self.SaveData["window_size"][0], self.SaveData["window_size"][1]) # x-position, y-position, width, height
-            
     
     def FitWindowToContentWidth(self):
         #print("fitting width to content")
@@ -328,6 +326,8 @@ class AdhaanApp(QMainWindow):
         datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow.strftime("%d") + tommorowsPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
         maghribToFujr = ( datetimeFujr - datetimeMaghrib)
         midnight = (datetimeMaghrib +  (maghribToFujr / 2) ).strftime("%H:%M")
+        firstThird = (datetimeMaghrib +  (maghribToFujr / 3) ).strftime("%H:%M")
+        lastThird = (datetimeMaghrib +  ((maghribToFujr / 3) * 2) ).strftime("%H:%M")
         #print(timeNow, (datetimeMaghrib +  (maghribToFujr / 2) ))
         
         #store prayer times in dict
@@ -337,7 +337,9 @@ class AdhaanApp(QMainWindow):
                             "Asr":{"name":"Asr", "time":todaysPrayerTimes["asr"],"font_size": self.DefaultFontSize},
                             "Maghrib":{"name":"Maghrib", "time":todaysPrayerTimes["magrib"],"font_size": self.DefaultFontSize},
                             "Isha":{"name":"Isha", "time":todaysPrayerTimes["isha"],"font_size": self.DefaultFontSize},
-                            "Midnight":{"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize}}
+                            "Midnight":{"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize},
+                            "FirstThird":{"name":"FirstThird", "time":firstThird,"font_size": self.DefaultFontSize},
+                            "LastThird":{"name":"LastThird", "time":lastThird,"font_size": self.DefaultFontSize}}
 
     def MainPageButtons(self):
         
@@ -351,6 +353,7 @@ class AdhaanApp(QMainWindow):
             infoIcon.setAlignment(Qt.AlignTop | Qt.AlignLeft )
             infoIcon.setSizePolicy(standardSizePolicy)
             infoIcon.setToolTip(toolTipText)
+            self.SetToolTipStyleSheet(infoIcon) # TODO combine with createToolTip
             return infoIcon
         
         self.AllWidgets = {}
@@ -407,6 +410,11 @@ class AdhaanApp(QMainWindow):
 
         # Populate Prayer times
         for time in self.PrayerTimes.values():
+            
+            # Dont make widgets for first and last third
+            if time["name"] == "FirstThird" or time["name"] == "LastThird":
+                continue
+            
             prayerName = QLabel(time["name"], self)
             prayerName.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
             prayerName.setAlignment(Qt.AlignRight)
@@ -427,28 +435,19 @@ class AdhaanApp(QMainWindow):
 
             # Add tool tip to specific prayer times
             if time["name"] == "Isha":
-                # Calculate first third # TODO FINISH AND USE THIS CALCULATIOON
-                firstThird = datetime.datetime.strptime(time["time"], "%H:%M")
-                infoIcon = createToolTip("First third: {}".format("12:00"))
-                infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
-                self.SetToolTipStyleSheet(infoIcon) # TODO combine with createToolTip
+                # Calculate first third
+                infoIcon = createToolTip("First third starts at:\n{}".format(self.PrayerTimes["FirstThird"]["time"]))
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
                 self.AllWidgets["IshaToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
             if time["name"] == "Midnight":
-                # Calculate first third  # TODO FINISH AND USE THIS CALCULATIOON
-                lastThird = datetime.datetime.strptime(time["time"], "%H:%M")
-                infoIcon = createToolTip("Last third: {}".format("03:00"))
-                infoIcon.setSizePolicy(standardSizePolicy)  # Ensures it doesn't expand
-                self.SetToolTipStyleSheet(infoIcon)
+                # Calculate first third
+                infoIcon = createToolTip("Last third starts at:\n{}".format(self.PrayerTimes["LastThird"]["time"]))
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
                 self.AllWidgets["MidnightToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
 
             rows += normalRowSpan
             self.AllWidgets[time["name"]] = {"Widgets": [prayerName, colon, prayerTime], "Font": self.DefaultFont, "FontSize": self.DefaultLargeFontSize}
 
-    #maghribToFujr = ( datetimeFujr - datetimeMaghrib)
-    #midnight = (datetimeMaghrib +  (maghribToFujr / 2) ).strftime("%H:%M")
-        
     def resizeEvent(self, event):
             new_size = event.size()
             stepSize = 10

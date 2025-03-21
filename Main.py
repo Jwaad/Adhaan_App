@@ -58,7 +58,7 @@ class AdhaanApp(QMainWindow):
         super().__init__()
         
         #Debug mode
-        self.DebugMode = False
+        self.DebugMode = True
         self.DebugTime = "2025-03-20 04:21:50"
         self.DebugTime = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
         self.PreviousMin = datetime.datetime.now().strftime("%M")
@@ -282,6 +282,7 @@ class AdhaanApp(QMainWindow):
         """Handle tray icon activation"""
         if reason == QSystemTrayIcon.DoubleClick:
             self.RestoreWindowFromTray()  # Restore the window if double-clicked
+            self.setWindowState(Qt.WindowNoState)
         elif reason == QSystemTrayIcon.MiddleClick:
             self.QuitAppFromTray()
             
@@ -309,7 +310,8 @@ class AdhaanApp(QMainWindow):
             self.DebugTime = self.DebugTime + datetime.timedelta(seconds=1)
             timeNow = self.DebugTime
             
-        self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M:%S"))
+        #self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M:%S"))
+        self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M"))
         
         minsLeft = self.UpdateTilUntilNextPrayer()
          
@@ -369,6 +371,7 @@ class AdhaanApp(QMainWindow):
                 formattedTimeTilNext = str(timeTilNext).split(":")
                 prevTimeUntil = self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].text() # FOR DEBUG LOG
                 newTimeUntilNext = "Time until {}: {}h {}m {}s".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1],formattedTimeTilNext[2][:2])
+                #newTimeUntilNext = "Time until {}: {}h {}m".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1])
                 self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].setText(newTimeUntilNext)
                 timeFound = True
                 break

@@ -327,7 +327,7 @@ class AdhaanApp(QMainWindow):
             
         # Update prayer time each minute
         minNow = timeNow.strftime("%M")
-        if minNow != self.PreviousMin:
+        if minNow != self.PreviousMin:            
             self.OnMinuteChange(minsLeft, self.PreviousMin, minNow)
             self.PreviousMin = minNow
             self.PrevMinsLeft = minsLeft
@@ -376,10 +376,15 @@ class AdhaanApp(QMainWindow):
         # Starting from Fujr, loop through all prayer times, and the first that is higher than current time is the next prayer
         timeFound = False
         for prayer in self.PrayerTimes.values():
-            prayerDatetime = datetime.datetime.strptime(timeNow.strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
-            print(prayer,prayerDatetime)
+            prayerDatetime = prayer["time"]
+            #datetime.datetime.strptime(timeNow.strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
+            
+            # Ignore first and last thirds
+            if prayer["name"] == "FirstThird" or prayer["name"] == "LastThird":
+                continue
+            
             if timeNow < prayerDatetime:
-                #timeTilNext = prayerDatetime - timeNow + datetime.timedelta(seconds=60)
+                
                 # distance between now and this prayer
                 timeTilNext = prayerDatetime - timeNow
                 
@@ -427,22 +432,41 @@ class AdhaanApp(QMainWindow):
         datetimeMaghrib = datetime.datetime.strptime(year + "-" + month + "-" + day + todaysPrayerTimes["magrib"], "%Y-%m-%d%H:%M")
         datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow.strftime("%d") + tommorowsPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
         maghribToFujr = ( datetimeFujr - datetimeMaghrib)
-        midnight = (datetimeMaghrib +  (maghribToFujr / 2) ).strftime("%H:%M")
-        firstThird = (datetimeMaghrib +  (maghribToFujr / 3) ).strftime("%H:%M")
-        lastThird = (datetimeMaghrib +  ((maghribToFujr / 3) * 2) ).strftime("%H:%M")
+       
+        midnight = (datetimeMaghrib +  (maghribToFujr / 2) )
+        firstThird = (datetimeMaghrib +  (maghribToFujr / 3) )
+        lastThird = (datetimeMaghrib +  ((maghribToFujr / 3) * 2) )
+        #print(datetimeMaghrib, ((maghribToFujr / 3) * 2), lastThird)
         #print(timeNow, (datetimeMaghrib +  (maghribToFujr / 2) ))
         
         #store prayer times in dict
-        self.PrayerTimes = {"Fajr":{"name":"Fujr", "time":todaysPrayerTimes["fajr"], "font_size": self.DefaultFontSize},
-                            "Sunrise":{"name":"Sunrise", "time":todaysPrayerTimes["sunrise"], "font_size": self.DefaultFontSize},
-                            "Dhuhr":{"name":"Dhuhr", "time":todaysPrayerTimes["dhuhr"], "font_size": self.DefaultFontSize},
-                            "Asr":{"name":"Asr", "time":todaysPrayerTimes["asr"],"font_size": self.DefaultFontSize},
-                            "Maghrib":{"name":"Maghrib", "time":todaysPrayerTimes["magrib"],"font_size": self.DefaultFontSize},
-                            "Isha":{"name":"Isha", "time":todaysPrayerTimes["isha"],"font_size": self.DefaultFontSize},
+        self.PrayerTimes = {"Fajr":{"name":"Fujr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["fajr"]), "font_size": self.DefaultFontSize},
+                            "Sunrise":{"name":"Sunrise", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["sunrise"]), "font_size": self.DefaultFontSize},
+                            "Dhuhr":{"name":"Dhuhr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["dhuhr"]), "font_size": self.DefaultFontSize},
+                            "Asr":{"name":"Asr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["asr"]),"font_size": self.DefaultFontSize},
+                            "Maghrib":{"name":"Maghrib", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["magrib"]),"font_size": self.DefaultFontSize},
+                            "Isha":{"name":"Isha", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["isha"]),"font_size": self.DefaultFontSize},
                             "FirstThird":{"name":"FirstThird", "time":firstThird,"font_size": self.DefaultFontSize},
                             "Midnight":{"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize},
                             "LastThird":{"name":"LastThird", "time":lastThird,"font_size": self.DefaultFontSize}}
+        #for asd in self.PrayerTimes.values():
+        #    print(asd)
+        
+    def HourMinToDateTime(self, day:str, month:str, year:str, hourMinString:str) -> datetime.datetime:
+        """Puts together a specified day, month and hour and minute string into a datetime object
 
+        Args:
+            day (str): day in format "DD"
+            month (str): month in format "MM"
+            year (str): year in format "YYYY"
+            hourMinString (str): hour and minute in format "HH:MM"
+
+        Returns:
+            datetime.datetime: Return datetime.datetime obj of time inputed
+        """
+        return datetime.datetime.strptime(year + "-" + month + "-" + day + " " + hourMinString, "%Y-%m-%d %H:%M")
+        
+    
     def MainPageButtons(self):
         
         # Add info icon
@@ -516,7 +540,7 @@ class AdhaanApp(QMainWindow):
             # Dont make widgets for first and last third
             if time["name"] == "FirstThird" or time["name"] == "LastThird":
                 continue
-            
+
             prayerName = QLabel(time["name"], self)
             prayerName.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
             prayerName.setAlignment(Qt.AlignRight)
@@ -529,7 +553,8 @@ class AdhaanApp(QMainWindow):
             colon.setSizePolicy(standardSizePolicy)
             self.layout.addWidget(colon, rows, 3, normalRowSpan, 1)
             
-            prayerTime = QLabel(time["time"], self)
+            prayerTime = time["time"].strftime("%H:%M")
+            prayerTime = QLabel(prayerTime, self)
             prayerTime.setFont(QFont(self.DefaultFont, self.DefaultLargeFontSize))
             prayerTime.setAlignment(Qt.AlignLeft)
             prayerTime.setSizePolicy(standardSizePolicy)
@@ -538,12 +563,12 @@ class AdhaanApp(QMainWindow):
             # Add tool tip to specific prayer times
             if time["name"] == "Isha":
                 # Calculate first third
-                infoIcon = createToolTip("First third starts at:\n{}".format(self.PrayerTimes["FirstThird"]["time"]))
+                infoIcon = createToolTip("First third starts at:\n{}".format(self.PrayerTimes["FirstThird"]["time"].strftime("%H:%M")))
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
                 self.AllWidgets["IshaToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
             if time["name"] == "Midnight":
                 # Calculate first third
-                infoIcon = createToolTip("Last third starts at:\n{}".format(self.PrayerTimes["LastThird"]["time"]))
+                infoIcon = createToolTip("Last third starts at:\n{}".format(self.PrayerTimes["LastThird"]["time"].strftime("%H:%M")))
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
                 self.AllWidgets["MidnightToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
 

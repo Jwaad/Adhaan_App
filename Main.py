@@ -89,10 +89,15 @@ class AdhaanApp(QMainWindow):
         self.WindowSize = (300, 500) # (width, height)
         self.setGeometry(1500, 300, self.WindowSize[0], self.WindowSize[1]) # x-position, y-position, width, height
         self.WinHeightAtPreviousResize = self.WindowSize[1]
+        
+        # Sort out paths
         try:
-            iconPath = sys._MEIPASS + "./AdthaanAppIcons/icon.png"
+            self.BasePath = sys._MEIPASS
         except Exception:
-            iconPath = "./AdthaanAppIcons/icon.png"
+            self.BasePath = "."
+        iconPath = self.BasePath + "/AdthaanAppIcons/icon.png"
+        mediaPath = self.BasePath + "/AdthaanAppMedia/"
+        
         self.setWindowIcon(QIcon(iconPath))
         
         # Load audio into memory, MAKES THE APP LAG on start, MAYBE I THREAD THIS?

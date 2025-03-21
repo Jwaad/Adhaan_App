@@ -54,11 +54,12 @@ class AdhaanApp(QMainWindow):
         
         #Debug mode
         self.DebugMode = False
-        self.DebugTime = "2025-03-19 23:00:00"
+        self.DebugTime = "2025-03-20 04:21:50"
+        self.DebugTime = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
         self.PreviousMin = datetime.datetime.now().strftime("%M")
         if self.DebugMode == True:
             print("Debug mode enabled")
-            self.PreviousMin = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S").strftime("%M")
+            self.PreviousMin = self.DebugTime.strftime("%M")
             
         
         # Check if another instance is running
@@ -277,7 +278,8 @@ class AdhaanApp(QMainWindow):
         """Updates the QLabel with the current time."""
         timeNow = datetime.datetime.now()
         if self.DebugMode == True:
-            timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
+            self.DebugTime = self.DebugTime + datetime.timedelta(seconds=1)
+            timeNow = self.DebugTime
             
         self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M:%S"))
         
@@ -297,8 +299,10 @@ class AdhaanApp(QMainWindow):
         #print("TODO: UpdateTilUntilNextPrayer")
         timeNow = datetime.datetime.now()
         if self.DebugMode == True:
-            timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
-            
+            timeNow = self.DebugTime
+       
+        # Starting from Fujr, loop through all prayer times, and the first that is higher than current time is the next prayer
+        timeFound = False
         for prayer in self.PrayerTimes.values():
             prayerDatetime = datetime.datetime.strptime(timeNow.strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
             if timeNow <= prayerDatetime:
@@ -313,7 +317,7 @@ class AdhaanApp(QMainWindow):
         """
         timeNow = datetime.datetime.now()
         if self.DebugMode == True:
-            timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
+            timeNow = self.DebugTime
         
         # Call API and get todays prayer times
         year = timeNow.strftime("%Y")
@@ -370,7 +374,7 @@ class AdhaanApp(QMainWindow):
         
         timeNow = datetime.datetime.now()
         if self.DebugMode == True:
-            timeNow = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
+            timeNow = self.DebugTime
             
         standardSizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Ignored)
         self.TimeWidgets = [

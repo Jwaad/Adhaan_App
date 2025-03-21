@@ -74,24 +74,6 @@ class AdhaanApp(QMainWindow):
             logging.getLogger().setLevel(logging.DEBUG)
             print("Debug mode enabled")
             self.PreviousMin = (self.DebugTime - datetime.timedelta(minutes=1) ).strftime("%M")
-            
-        # Check if another instance is running
-        self.SharedMemory = QSharedMemory("AdthaanAppHussain")
-        size = 1024  # Size in bytes
-        if self.SharedMemory.create(size): #Returns true if succesfully created (false if it already exists)
-            self.SharedMemory.unlock() # redundant but... 
-        else:
-            #print("Shared Memory already exists, quiting...")
-            # TODO add popup here
-            adhaanApp.close()
-            QApplication.quit()  
-            sys.exit(0)
-        
-        # Init window
-        self.setWindowTitle('Salaat Times')
-        self.WindowSize = (300, 500) # (width, height)
-        self.setGeometry(1500, 300, self.WindowSize[0], self.WindowSize[1]) # x-position, y-position, width, height
-        self.WinHeightAtPreviousResize = self.WindowSize[1]
         
         # Sort out paths
         try:
@@ -101,7 +83,47 @@ class AdhaanApp(QMainWindow):
         iconPath = self.BasePath + "/AdthaanAppIcons/icon.png"
         mediaPath = self.BasePath + "/AdthaanAppMedia/"
         
+        #Set style sheet
+        self.ColourSchemes ={"Monokai":{"name":"Monokai", "background":"#202A25", "text":"#C4EBC8",
+                            "accent1":"#F6C0D0", "accent2":"#D0A5C0", "accent3":"#8E7C93"},
+                            
+                            "TrafficLight":{"name":"TrafficLight", "background":"#264653", "text":"#e76f51",
+                            "accent1":"#e9c46a", "accent2":"#f4a261", "accent3":"#2a9d8f"},
+                            
+                            "GreyGreen":{"name":"GreyGreen", "background":"#dad7cd", "text":"#344e41",
+                            "accent1":"#588157", "accent2":"#3a5a40", "accent3":"#a3b18a"},
+                            
+                            "PurplePink":{"name":"PurplePink", "background":"#231942", "text":"#e0b1cb",
+                            "accent1":"#9f86c0", "accent2":"#be95c4", "accent3":"#5e548e"},
+                            }
+        self.ColourScheme = self.ColourSchemes["TrafficLight"]
+        
+        # Init program fonts
+        self.DefaultFontSize = 15
+        self.DefaultLargeFontSize = 30
+        self.DefaultTitleFontSize = 50
+        self.DefaultFont = "Verdana"
+        
+        # Check if another instance is running
+        self.SharedMemory = QSharedMemory("AdthaanAppHussain")
+        size = 1024  # Size in bytes
+        if self.SharedMemory.create(size): #Returns true if succesfully created (false if it already exists)
+            self.SharedMemory.unlock() # redundant but... 
+        else:
+            #print("Shared Memory already exists, quiting...")
+            self.AlreadyRunningDialogBox(iconPath)
+            QApplication.quit()  
+            sys.exit(0)
+        
+        # Init window
+        self.setWindowTitle('Salaat Times')
+        self.WindowSize = (300, 500) # (width, height)
+        self.setGeometry(1500, 300, self.WindowSize[0], self.WindowSize[1]) # x-position, y-position, width, height
+        self.WinHeightAtPreviousResize = self.WindowSize[1]
         self.setWindowIcon(QIcon(iconPath))
+        
+        self.setWindowOpacity(1)
+        self.SetDefaultStyleSheet()    
         
         # Load audio into memory, MAKES THE APP LAG on start, MAYBE I THREAD THIS?
         self.AdthaanSound = QSound(mediaPath + "Adthaan_1.wav")  # Load the sound file
@@ -134,29 +156,6 @@ class AdhaanApp(QMainWindow):
         self.layout.setSpacing(0)
         widget.setLayout(self.layout)
         
-        # Init program fonts
-        self.DefaultFontSize = 15
-        self.DefaultLargeFontSize = 30
-        self.DefaultTitleFontSize = 50
-        self.DefaultFont = "Verdana"
-        
-        #Set style sheet
-        self.ColourSchemes ={"Monokai":{"name":"Monokai", "background":"#202A25", "text":"#C4EBC8",
-                            "accent1":"#F6C0D0", "accent2":"#D0A5C0", "accent3":"#8E7C93"},
-                            
-                            "TrafficLight":{"name":"TrafficLight", "background":"#264653", "text":"#e76f51",
-                            "accent1":"#e9c46a", "accent2":"#f4a261", "accent3":"#2a9d8f"},
-                            
-                            "GreyGreen":{"name":"GreyGreen", "background":"#dad7cd", "text":"#344e41",
-                            "accent1":"#588157", "accent2":"#3a5a40", "accent3":"#a3b18a"},
-                            
-                            "PurplePink":{"name":"PurplePink", "background":"#231942", "text":"#e0b1cb",
-                            "accent1":"#9f86c0", "accent2":"#be95c4", "accent3":"#5e548e"},
-                            }
-        self.ColourScheme = self.ColourSchemes["TrafficLight"]
-        self.setWindowOpacity(1)
-        self.SetDefaultStyleSheet()        
-        
         # Get initial prayer times
         self.DefaultAPI = "http://www.londonprayertimes.com/api/times/"
         self.APIKey = "17522509-896f-49b7-80c8-975c4be643b4"
@@ -181,12 +180,54 @@ class AdhaanApp(QMainWindow):
         self.LoadSaveData()
         self.MouseStartPos = None
     
+    def AlreadyRunningDialogBox(self, icon_path):
+        msg = QMessageBox()
+        msg.setWindowTitle("Adthaan app already running!")
+        msg.setWindowIcon(QIcon(icon_path))
+        msg.setText("App already running! \nPlease close before reopening.")
+        msg.setStandardButtons(QMessageBox.Ok)
+        styleSheet = f"""
+            QMessageBox {{
+                background-color: {self.ColourScheme["background"]};
+            }}
+            QLabel {{
+                font: {self.DefaultFontSize}pt {self.DefaultFont};
+                color: {self.ColourScheme["text"]}; 
+                
+            }}
+            QPushButton {{
+                background-color: {self.ColourScheme["accent3"]};
+                border: 1px solid {self.ColourScheme["accent1"]};
+                color: {self.ColourScheme["accent2"]};
+                padding: 10px 20px;
+                font: {self.DefaultFontSize}pt {self.DefaultFont};
+                margin: 4px 2px;
+                border-radius: 4px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.ColourScheme["background"]};
+            }}
+        """
+        #Apply and display                            
+        msg.setStyleSheet(styleSheet)
+        
+        #  center-aligned all text
+        textLabels = msg.findChildren(QLabel)
+        for label in textLabels:
+            label.setAlignment(Qt.AlignCenter)
+
+        # center-aligned buttons
+        buttonBox = msg.findChild(QDialogButtonBox)
+        if buttonBox:
+            buttonBox.setCenterButtons(True)
+        msg.exec_()
+    
     def SetDefaultStyleSheet(self):
         # Colour scheme : #202A25 #C4EBC8 #8E7C93 #D0A5C0 #F6C0D0
-        StyleText = """
-                        background-color: {}; 
-                        color: {};        /* Dark text */
-                    """.format(self.ColourScheme["background"], self.ColourScheme["text"])
+        StyleText = f"""
+                        background-color: {self.ColourScheme["background"]}; 
+                        color: {self.ColourScheme["text"]};        /* Dark text */
+                    """
 
         if self.DebugMode:
             StyleText += "\n border: 1px solid rgba(255, 0, 0, 30);"

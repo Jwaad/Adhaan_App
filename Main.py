@@ -55,12 +55,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtMultimedia import QSound
 
 class AdhaanApp(QMainWindow):
-    def __init__(self):
+    def __init__(self, app):
         """
         Initialises the Salaat Times window, setting its size and initialising its buttons.
         """
         # Init QWidgets
         super().__init__()
+        self.app = app
         
         #Debug mode
         self.DebugMode = False
@@ -618,7 +619,7 @@ if __name__ == '__main__':
 
     try:
         app = QApplication(sys.argv)
-        adhaanApp = AdhaanApp()
+        adhaanApp = AdhaanApp(app)
         adhaanApp.show()
         sys.exit(app.exec_())
     except Exception as e:

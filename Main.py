@@ -31,7 +31,7 @@
 
 
 # BUILD COMMAND: 
-# pyinstaller .\Main.py --clean --i=./AdthaanAppIcons/icon.ico --windowed --add-data="./AdthaanAppIcons/*;AdthaanAppIcons/." 
+# pyinstaller .\Main.py --clean --i=./AdthaanAppIcons/icon.ico --windowed --add-data="./AdthaanAppIcons/*;AdthaanAppIcons/."  --add-data="./AdthaanAppMedia/*;AdthaanAppMedia/."
 # ICON TO ICO: https://icoconvert.com/
 
 from doctest import debug

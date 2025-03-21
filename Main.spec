@@ -5,7 +5,7 @@ a = Analysis(
     ['Main.py'],
     pathex=[],
     binaries=[],
-    datas=[('./AdthaanAppIcons/*', 'AdthaanAppIcons/.')],
+    datas=[('./AdthaanAppIcons/*', 'AdthaanAppIcons/.'), ('./AdthaanAppMedia/*', 'AdthaanAppMedia/.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

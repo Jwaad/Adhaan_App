@@ -37,9 +37,12 @@
 from doctest import debug
 import sys
 import datetime
+from venv import logger
 import requests
 import json
 import signal
+import time
+import logging
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -58,6 +61,8 @@ class AdhaanApp(QMainWindow):
         self.DebugTime = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
         self.PreviousMin = datetime.datetime.now().strftime("%M")
         if self.DebugMode == True:
+            logging.basicConfig()
+            logging.getLogger().setLevel(logging.DEBUG)
             print("Debug mode enabled")
             self.PreviousMin = self.DebugTime.strftime("%M")
             
@@ -308,8 +313,17 @@ class AdhaanApp(QMainWindow):
             if timeNow <= prayerDatetime:
                 timeTilNext = prayerDatetime - timeNow + datetime.timedelta(seconds=60)
                 formattedTimeTilNext = str(timeTilNext).split(":")
-                self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].setText("Time until {}: {}h {}m".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1]))
-                return
+                prevTimeUntil = self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].text() # FOR DEBUG LOG
+                newTimeUntilNext = "Time until {}: {}h {}m {}s".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1],formattedTimeTilNext[2][:2])
+                self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].setText(newTimeUntilNext)
+                timeFound = True
+                break
+        #Swap to next days prayer times, or do that automatically after 12
+        if not timeFound:
+            print("WE ARE OUT OF PRAYER TIMES FOR TODAY, HANDLE THIS")
+            
+        logger.debug("TimeUntilNextPrayer changed from %s to %s", prevTimeUntil, newTimeUntilNext)
+        return int(timeTilNext.seconds / 60)
         
     def GetPrayerTimes(self):
         """

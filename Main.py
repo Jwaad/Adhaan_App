@@ -1,12 +1,18 @@
 # Written by Jwaad Hussain 2025
 #
 #   HIGH PRIOIRTY----------------------
-#   Alarms / adthaans #   Reminder / ding ding
-#   Setting page, multiple customisations Settings button OPTIONS MENU FOR CUSTOMISATION
-#   prayer time popups
-#   Next day after midnight (On next day, add small +1 icon next to date, until 12am)
-#   Create my own title bar
 #   Add pop up to refuse to open when already running
+#   prayer time popups
+#   Create my own title bar
+#   Next day after midnight (On next day, add small +1 icon next to date, until 12am)
+#   Setting page, multiple customisations Settings button OPTIONS MENU FOR CUSTOMISATION
+#       - select themes
+#       - have thirds in tooltip, or in line with widgets
+#       - Volume of adthaan
+#       - Volume of reminder 
+#       - minimize to tray tick box
+#       - change prayer time api
+#       - include thirds in the countdown. i.e. should app says "?m ?h ?s until ?third"
 #
 #   LOW PRIORITY-----------------------
 #   Experiment with style: colours and bolding
@@ -15,9 +21,8 @@
 #   pin to top
 #   Tray info, mins remaing / colour for urgency
 #   have alternative options, for displaying thirds, in line, or in tooltip
+#
 #   Rare cases seconds can get skipped -> timer not synced with system time.
-#   Make app close all other instances before opening, or refuse to open, and warn user.
-#   Make a fake clock during debug mode, that ticks each second
 #
 #   Known Bugs--------------------------
 #   strange horizontal minimizing behaviour Seems to be a windows thing, cant corner drag, horizontal length stuck to len at drag
@@ -59,7 +64,8 @@ class AdhaanApp(QMainWindow):
         
         #Debug mode
         self.DebugMode = True
-        self.DebugTime = "2025-03-20 04:23:50"
+        self.DebugTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.DebugTime = "2025-03-20 23:23:50"
         self.DebugTime = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
         self.PreviousMin = (datetime.datetime.now() - datetime.timedelta(minutes=1) ).strftime("%M")
         if self.DebugMode == True:
@@ -73,12 +79,12 @@ class AdhaanApp(QMainWindow):
         # Create if shared memory does not already exist
         size = 1024  # Size in bytes
         if self.SharedMemory.create(size): #Returns true if succesfully created (false if it already exists)
-            print("Created shared memory segment")
+            #print("Created shared memory segment")
             #self.SharedMemory.lock()  # Lock the memory before accessing it
             #Access data here if want to
             self.SharedMemory.unlock() # Unlock when you're done
         else:
-            print("Shared Memory already exists, quiting...")
+            #print("Shared Memory already exists, quiting...")
             # TODO add popup here
             adhaanApp.close()
             QApplication.quit()  
@@ -319,7 +325,6 @@ class AdhaanApp(QMainWindow):
         # Update prayer time each minute
         minNow = timeNow.strftime("%M")
         if minNow != self.PreviousMin:
-            print("self.PrevMinsLeft", self.PrevMinsLeft, "minsLeft", minsLeft) # HERE TODO NOTE DELETE
             self.OnMinuteChange(minsLeft, self.PreviousMin, minNow)
             self.PreviousMin = minNow
             self.PrevMinsLeft = minsLeft
@@ -360,7 +365,7 @@ class AdhaanApp(QMainWindow):
         Updates the QLabel with the current time.
         Returns the time left until the next prayer in minutes
         """
-        
+        timeTilNext = None 
         timeNow = datetime.datetime.now()
         if self.DebugMode == True:
             timeNow = self.DebugTime
@@ -369,6 +374,7 @@ class AdhaanApp(QMainWindow):
         timeFound = False
         for prayer in self.PrayerTimes.values():
             prayerDatetime = datetime.datetime.strptime(timeNow.strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
+            print(prayer,prayerDatetime)
             if timeNow < prayerDatetime:
                 #timeTilNext = prayerDatetime - timeNow + datetime.timedelta(seconds=60)
                 # distance between now and this prayer
@@ -385,10 +391,11 @@ class AdhaanApp(QMainWindow):
                 break
             
         #Swap to next days prayer times, or do that automatically after 12
-        if not timeFound:
+        if timeFound:
+            logger.debug("UpdateTilUntilNextPrayer: TimeUntilNextPrayer changed from %s to %s", prevTimeUntil, newTimeUntilNext)
+        else:    
             print("WE ARE OUT OF PRAYER TIMES FOR TODAY, HANDLE THIS")
             
-        logger.debug("UpdateTilUntilNextPrayer: TimeUntilNextPrayer changed from %s to %s", prevTimeUntil, newTimeUntilNext)
         return int(timeTilNext.seconds / 60)
         
     def GetPrayerTimes(self):
@@ -426,8 +433,8 @@ class AdhaanApp(QMainWindow):
                             "Asr":{"name":"Asr", "time":todaysPrayerTimes["asr"],"font_size": self.DefaultFontSize},
                             "Maghrib":{"name":"Maghrib", "time":todaysPrayerTimes["magrib"],"font_size": self.DefaultFontSize},
                             "Isha":{"name":"Isha", "time":todaysPrayerTimes["isha"],"font_size": self.DefaultFontSize},
-                            "Midnight":{"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize},
                             "FirstThird":{"name":"FirstThird", "time":firstThird,"font_size": self.DefaultFontSize},
+                            "Midnight":{"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize},
                             "LastThird":{"name":"LastThird", "time":lastThird,"font_size": self.DefaultFontSize}}
 
     def MainPageButtons(self):

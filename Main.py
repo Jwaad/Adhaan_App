@@ -13,6 +13,8 @@
 #       - minimize to tray tick box
 #       - change prayer time api
 #       - include thirds in the countdown. i.e. should app says "?m ?h ?s until ?third"
+#       - back to hoome
+#       - set transparency
 #
 #   LOW PRIORITY-----------------------
 #   Experiment with style: colours and bolding
@@ -63,16 +65,16 @@ class AdhaanApp(QMainWindow):
         super().__init__()
         
         #Debug mode
-        self.DebugMode = True
+        self.DebugMode = False
         self.DebugTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.DebugTime = "2025-03-20 23:23:50"
+        self.DebugTime = "2025-03-20 05:59:55"
         self.DebugTime = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
         self.PreviousMin = (datetime.datetime.now() - datetime.timedelta(minutes=1) ).strftime("%M")
         if self.DebugMode == True:
             logging.basicConfig()
             logging.getLogger().setLevel(logging.DEBUG)
             print("Debug mode enabled")
-            self.PreviousMin = (self.DebugTime- datetime.timedelta(minutes=1) ).strftime("%M")
+            self.PreviousMin = (self.DebugTime - datetime.timedelta(minutes=1) ).strftime("%M")
             
         # Check if another instance is running
         self.SharedMemory = QSharedMemory("AdthaanAppHussain")
@@ -108,7 +110,8 @@ class AdhaanApp(QMainWindow):
         self.setWindowIcon(QIcon(iconPath))
         
         # Load audio into memory, MAKES THE APP LAG on start, MAYBE I THREAD THIS?
-        self.AdthaanSound = QSound(mediaPath + "/Adthaan/Adthaan_1.wav")  # Load the sound file
+        self.AdthaanSound = QSound(mediaPath + "Adthaan_1.wav")  # Load the sound file
+        self.FujrAdthaanSound = QSound(mediaPath + "Fujr_Adthaan_2.wav")  # Load the sound file
         self.ReminderSound = QSound(mediaPath + "Alert.wav") #Load reminder file
         self.ReminderPlayed = False 
 
@@ -163,6 +166,7 @@ class AdhaanApp(QMainWindow):
         # Get initial prayer times
         self.DefaultAPI = "http://www.londonprayertimes.com/api/times/"
         self.APIKey = "17522509-896f-49b7-80c8-975c4be643b4"
+        self.PrayerNames = ["Fujr", "Dhuhr", "Asr", "Maghrib", "Isha"]
         self.GetPrayerTimes()
         
         # Populate default buttons
@@ -170,6 +174,7 @@ class AdhaanApp(QMainWindow):
         self.MainPageButtons()
         
         # Initial time update
+        self.CurrentPrayerTime = None
         self.PrevMinsLeft = self.UpdateTilUntilNextPrayer() #+ 1
         self.OnSecondChange()
 
@@ -352,16 +357,30 @@ class AdhaanApp(QMainWindow):
         #Trigger on prayer chagnge
         if minsLeft > self.PrevMinsLeft:
             self.OnPrayerTimeChange()
-            self.AdthaanSound.play()
+            
         
        
     def OnPrayerTimeChange(self):
         """
         Set of events and triggers that should occur on prayer time change
         """        
-        logger.info("Prayer time changed: Playing Adthaan sound")
+        logger.info("Prayer Time Changed")
         self.ReminderPlayed = False
-        self.AdthaanPlayed = False
+        # If not a prayer dont play adthaan
+        if not self.CurrentPrayerTime in self.PrayerNames:
+            logger.info(f"Not Playing Sound as time of : {self.CurrentPrayerTime}")
+            return
+        
+        # For fujr
+        if self.CurrentPrayerTime == "Fujr":
+            logger.info("Playing Fujr Adthaan Sound")
+            self.FujrAdthaanSound.play()
+            return
+        
+        #All other prayers
+        logger.info("Playing Regular Adthaan Sound")
+        self.AdthaanSound.play()
+        
 
     def UpdateTilUntilNextPrayer(self) -> int:
         """
@@ -397,11 +416,13 @@ class AdhaanApp(QMainWindow):
                 newTimeUntilNext = "Time until {}: {}h {}m {}s".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1],formattedTimeTilNext[2][:2])
                 self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].setText(newTimeUntilNext)
                 break
+            self.CurrentPrayerTime = prayer["name"]
             
         #Swap to next days prayer times, or do that automatically after 12
         if timeFound:
             logger.debug("UpdateTilUntilNextPrayer: TimeUntilNextPrayer changed from %s to %s", prevTimeUntil, newTimeUntilNext)
         else:    
+            self.CurrentPrayerTime = prayer["name"] = None
             print("WE ARE OUT OF PRAYER TIMES FOR TODAY, HANDLE THIS")
         
         if timeTilNext == None:
@@ -433,14 +454,12 @@ class AdhaanApp(QMainWindow):
         datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow.strftime("%d") + tommorowsPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
         maghribToFujr = ( datetimeFujr - datetimeMaghrib)
        
-        midnight = (datetimeMaghrib +  (maghribToFujr / 2) )
-        firstThird = (datetimeMaghrib +  (maghribToFujr / 3) )
-        lastThird = (datetimeMaghrib +  ((maghribToFujr / 3) * 2) )
-        #print(datetimeMaghrib, ((maghribToFujr / 3) * 2), lastThird)
-        #print(timeNow, (datetimeMaghrib +  (maghribToFujr / 2) ))
+        midnight = (datetimeMaghrib +  (maghribToFujr / 2))
+        firstThird = (datetimeMaghrib +  (maghribToFujr / 3))
+        lastThird = (datetimeMaghrib +  ((maghribToFujr / 3) * 2))
         
         #store prayer times in dict
-        self.PrayerTimes = {"Fajr":{"name":"Fujr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["fajr"]), "font_size": self.DefaultFontSize},
+        self.PrayerTimes = {"Fujr":{"name":"Fujr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["fajr"]), "font_size": self.DefaultFontSize},
                             "Sunrise":{"name":"Sunrise", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["sunrise"]), "font_size": self.DefaultFontSize},
                             "Dhuhr":{"name":"Dhuhr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["dhuhr"]), "font_size": self.DefaultFontSize},
                             "Asr":{"name":"Asr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["asr"]),"font_size": self.DefaultFontSize},

@@ -68,11 +68,21 @@ class AdhaanApp(QMainWindow):
             
         
         # Check if another instance is running
-        self.memory = QSharedMemory("AdthaanAppHussain")
-        if self.memory.attach():
-            print("Application is already running!")
-            #QApplication.quit()
-            sys.exit()  # Exit if the app is already running
+        self.SharedMemory = QSharedMemory("AdthaanAppHussain")
+        # Create if shared memory does not already exist
+        size = 1024  # Size in bytes
+        if self.SharedMemory.create(size): #Returns true if succesfully created (false if it already exists)
+            print("Created shared memory segment")
+            #self.SharedMemory.lock()  # Lock the memory before accessing it
+            #Access data here if want to
+            self.SharedMemory.unlock() # Unlock when you're done
+        else:
+            print("Shared Memory already exists, quiting...")
+            # TODO add popup here
+            adhaanApp.close()
+            QApplication.quit()  
+            sys.exit(0)
+    
         
         # Init window
         self.setWindowTitle('Salaat Times')
@@ -84,6 +94,12 @@ class AdhaanApp(QMainWindow):
         except Exception:
             iconPath = "./AdthaanAppIcons/icon.png"
         self.setWindowIcon(QIcon(iconPath))
+        
+        # Load audio into memory, MAKES THE APP LAG on start, MAYBE I THREAD THIS?
+        self.AdhanSound = QSound(mediaPath + "/Adthaan/Adthaan_1.wav")  # Load the sound file
+        self.ReminderSound = QSound(mediaPath + "Alert.wav") #Load reminder file
+        self.ReminderPlayed = False
+        self.AdthaanPlayed = False        
 
         # Setup tray icon
         self.tray_icon = QSystemTrayIcon(self)

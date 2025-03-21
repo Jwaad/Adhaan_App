@@ -13,7 +13,7 @@
 #       - minimize to tray tick box
 #       - change prayer time api
 #       - include thirds in the countdown. i.e. should app says "?m ?h ?s until ?third"
-#       - back to hoome
+#       - back to home
 #       - set transparency
 #
 #   LOW PRIORITY-----------------------
@@ -23,8 +23,7 @@
 #   pin to top
 #   Tray info, mins remaing / colour for urgency
 #   have alternative options, for displaying thirds, in line, or in tooltip
-#
-#   Rare cases seconds can get skipped -> timer not synced with system time.
+#   in very very rare cases seconds can get skipped -> timer not synced with system time.
 #
 #   Known Bugs--------------------------
 #   strange horizontal minimizing behaviour Seems to be a windows thing, cant corner drag, horizontal length stuck to len at drag
@@ -42,7 +41,6 @@
 # pyinstaller .\Main.py --clean --i=./AdthaanAppIcons/icon.ico --windowed --add-data="./AdthaanAppIcons/*;AdthaanAppIcons/."  --add-data="./AdthaanAppMedia/*;AdthaanAppMedia/."
 # ICON TO ICO: https://icoconvert.com/
 
-from doctest import debug
 import sys
 import datetime
 from venv import logger
@@ -78,20 +76,15 @@ class AdhaanApp(QMainWindow):
             
         # Check if another instance is running
         self.SharedMemory = QSharedMemory("AdthaanAppHussain")
-        # Create if shared memory does not already exist
         size = 1024  # Size in bytes
         if self.SharedMemory.create(size): #Returns true if succesfully created (false if it already exists)
-            #print("Created shared memory segment")
-            #self.SharedMemory.lock()  # Lock the memory before accessing it
-            #Access data here if want to
-            self.SharedMemory.unlock() # Unlock when you're done
+            self.SharedMemory.unlock() # redundant but... 
         else:
             #print("Shared Memory already exists, quiting...")
             # TODO add popup here
             adhaanApp.close()
             QApplication.quit()  
             sys.exit(0)
-    
         
         # Init window
         self.setWindowTitle('Salaat Times')

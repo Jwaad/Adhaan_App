@@ -107,14 +107,11 @@ class AdhaanApp(QMainWindow):
         # Check if another instance is running
         self.SharedMemory = QSharedMemory("AdthaanAppHussain")
         size = 1024  # Size in bytes
-        if self.SharedMemory.create(size): #Returns true if succesfully created (false if it already exists)
-            self.SharedMemory.unlock() # redundant but... 
-        else:
-            #print("Shared Memory already exists, quiting...")
+        if not self.SharedMemory.create(size): # If couldnt create, another instance is running
             self.AlreadyRunningDialogBox(iconPath)
             QApplication.quit()  
             sys.exit(0)
-        
+            
         # Init window
         self.setWindowTitle('Salaat Times')
         self.WindowSize = (300, 500) # (width, height)

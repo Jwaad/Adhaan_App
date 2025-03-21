@@ -1,23 +1,23 @@
 # Written by Jwaad Hussain 2025
-# TODO: 
+#
 #   HIGH PRIOIRTY----------------------
+#   Alarms / adthaans #   Reminder / ding ding
+#   Setting page, multiple customisations Settings button OPTIONS MENU FOR CUSTOMISATION
+#   prayer time popups
 #   Next day after midnight (On next day, add small +1 icon next to date, until 12am)
-#   Transparent window
-#   Setting page, multiple customisations
-#   Alarms / adthaans
+#   Create my own title bar
+#   Add pop up to refuse to open when already running
 #
 #   LOW PRIORITY-----------------------
 #   Experiment with style: colours and bolding
-#   DOWNLOAD WHOLE REST OF MONTH TO MEM
-#   OPTIONS MENU FOR CUSTOMISATION
+#   DOWNLOAD WHOLE REST OF MONTH TO MEMORY
 #   OTHER PRAYER CALCS (specifically kenya calc)
-#   Reminder / ding ding
-#   Settings button
 #   pin to top
-#   prayer time popups
 #   Tray info, mins remaing / colour for urgency
-#   have alternative option
+#   have alternative options, for displaying thirds, in line, or in tooltip
 #   Rare cases seconds can get skipped -> timer not synced with system time.
+#   Make app close all other instances before opening, or refuse to open, and warn user.
+#   Make a fake clock during debug mode, that ticks each second
 #
 #   Known Bugs--------------------------
 #   strange horizontal minimizing behaviour Seems to be a windows thing, cant corner drag, horizontal length stuck to len at drag
@@ -28,6 +28,7 @@
 #
 #   Known Issues------------------------
 #   Quitting from system tray, doesnt cause app to open into system tray next start
+#   Loading audio causes app to start slowly
 
 
 # BUILD COMMAND: 
@@ -46,6 +47,7 @@ import logging
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtMultimedia import QSound
 
 class AdhaanApp(QMainWindow):
     def __init__(self):
@@ -66,7 +68,6 @@ class AdhaanApp(QMainWindow):
             print("Debug mode enabled")
             self.PreviousMin = self.DebugTime.strftime("%M")
             
-        
         # Check if another instance is running
         self.SharedMemory = QSharedMemory("AdthaanAppHussain")
         # Create if shared memory does not already exist
@@ -160,15 +161,16 @@ class AdhaanApp(QMainWindow):
         self.GetPrayerTimes()
         
         # Populate default buttons
+        #time.sleep(3) # Sleep before loading UI, to let above load and calculate facelessly
         self.MainPageButtons()
         
         # Initial time update
-        self.UpdateCurrentTime()
+        self.OnSecondChange()
         self.UpdateTilUntilNextPrayer()
-        
+
         # Timer to update clock every second
         self.SecondTimer = QTimer(self)
-        self.SecondTimer.timeout.connect(self.UpdateCurrentTime)
+        self.SecondTimer.timeout.connect(self.OnSecondChange)
         self.SecondTimer.start(1000)  # 1000 ms = 1 second
         
         # Load Save data
@@ -186,7 +188,7 @@ class AdhaanApp(QMainWindow):
             StyleText += "\n border: 1px solid rgba(255, 0, 0, 30);"
             
         self.setStyleSheet(StyleText)
-    
+
     def SetToolTipStyleSheet(self, Widget):  
         """
         Sets the style sheet for tooltips.
@@ -300,8 +302,8 @@ class AdhaanApp(QMainWindow):
         """Quit the app when clicking the 'Quit' action in the tray menu."""
         QApplication.quit()
         
-    def UpdateCurrentTime(self):
-        """Updates the QLabel with the current time."""
+    def OnSecondChange(self):
+        """Updates the QLabel with the current time each second"""
         timeNow = datetime.datetime.now()
         if self.DebugMode == True:
             self.DebugTime = self.DebugTime + datetime.timedelta(seconds=1)
@@ -309,20 +311,51 @@ class AdhaanApp(QMainWindow):
             
         self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M:%S"))
         
-        #NOTE: assumes self.prayerTimes["midnight"] is set
-        #if timeNow > datetime.datetime.strptime(self.PrayerTimes["Midnight"]["time"], "%H:%M"): 
-        #    print("past midnight")   
-        # TODO add some code to +1 to day here
-        
+        minsLeft = self.UpdateTilUntilNextPrayer()
+         
         # Update prayer time each minute
         minNow = timeNow.strftime("%M")
         if minNow != self.PreviousMin:
-            self.UpdateTilUntilNextPrayer()
+            self.OnMinuteChange(minsLeft, self.PreviousMin, minNow)
             self.PreviousMin = minNow
 
-    def UpdateTilUntilNextPrayer(self):
-        """Updates the QLabel with the current time."""
-        #print("TODO: UpdateTilUntilNextPrayer")
+         
+    def OnMinuteChange(self, minsLeft: int, prevMin = 0 , currentMin = 0 ):
+        """Code to run on min change
+
+        Args:
+            minsLeft (int): time left until next prayer in mins
+            prevMin (int): min that it was for logging
+            currentMin (int): min that it is now also for logging
+        """
+        
+        logger.debug("Minutes changed from %s to %s", prevMin, currentMin)
+        
+        if not self.ReminderPlayed and minsLeft <= 15:
+            logger.info("Playing reminder sound")
+            self.ReminderSound.play()
+            self.ReminderPlayed = True
+        
+        #Trigger on prayer chagnge
+        #if smn smn
+            #self.OnPrayerTimeChange()
+       
+        
+    
+    def OnPrayerTimeChange(self):
+        """
+        Set of events and triggers that should occur on prayer time change
+        """        
+        self.ReminderPlayed = False
+        self.AdthaanPlayed = False
+
+    def UpdateTilUntilNextPrayer(self) -> int:
+        """
+        Updates the QLabel with the current time.
+        Returns the time left until the next prayer in minutes
+        """
+        # TODO add check for change of prayer time
+        
         timeNow = datetime.datetime.now()
         if self.DebugMode == True:
             timeNow = self.DebugTime

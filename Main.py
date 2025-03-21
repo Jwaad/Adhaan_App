@@ -321,7 +321,10 @@ class AdhaanApp(QMainWindow):
         
         # Update time left until next prayer
         minsLeft = self.UpdateTilUntilNextPrayer()
-         
+        # if minsLeft is none, dont execute OnMinuteChange
+        if minsLeft == None:
+            return
+            
         # Update prayer time each minute
         minNow = timeNow.strftime("%M")
         if minNow != self.PreviousMin:
@@ -395,7 +398,10 @@ class AdhaanApp(QMainWindow):
             logger.debug("UpdateTilUntilNextPrayer: TimeUntilNextPrayer changed from %s to %s", prevTimeUntil, newTimeUntilNext)
         else:    
             print("WE ARE OUT OF PRAYER TIMES FOR TODAY, HANDLE THIS")
-            
+        
+        if timeTilNext == None:
+            return None
+        
         return int(timeTilNext.seconds / 60)
         
     def GetPrayerTimes(self):

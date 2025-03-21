@@ -59,14 +59,14 @@ class AdhaanApp(QMainWindow):
         
         #Debug mode
         self.DebugMode = True
-        self.DebugTime = "2025-03-20 04:21:50"
+        self.DebugTime = "2025-03-20 04:23:50"
         self.DebugTime = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
-        self.PreviousMin = datetime.datetime.now().strftime("%M")
+        self.PreviousMin = (datetime.datetime.now() - datetime.timedelta(minutes=1) ).strftime("%M")
         if self.DebugMode == True:
             logging.basicConfig()
             logging.getLogger().setLevel(logging.DEBUG)
             print("Debug mode enabled")
-            self.PreviousMin = self.DebugTime.strftime("%M")
+            self.PreviousMin = (self.DebugTime- datetime.timedelta(minutes=1) ).strftime("%M")
             
         # Check if another instance is running
         self.SharedMemory = QSharedMemory("AdthaanAppHussain")
@@ -102,10 +102,9 @@ class AdhaanApp(QMainWindow):
         self.setWindowIcon(QIcon(iconPath))
         
         # Load audio into memory, MAKES THE APP LAG on start, MAYBE I THREAD THIS?
-        self.AdhanSound = QSound(mediaPath + "/Adthaan/Adthaan_1.wav")  # Load the sound file
+        self.AdthaanSound = QSound(mediaPath + "/Adthaan/Adthaan_1.wav")  # Load the sound file
         self.ReminderSound = QSound(mediaPath + "Alert.wav") #Load reminder file
-        self.ReminderPlayed = False
-        self.AdthaanPlayed = False        
+        self.ReminderPlayed = False 
 
         # Setup tray icon
         self.tray_icon = QSystemTrayIcon(self)
@@ -165,8 +164,8 @@ class AdhaanApp(QMainWindow):
         self.MainPageButtons()
         
         # Initial time update
+        self.PrevMinsLeft = self.UpdateTilUntilNextPrayer() #+ 1
         self.OnSecondChange()
-        self.UpdateTilUntilNextPrayer()
 
         # Timer to update clock every second
         self.SecondTimer = QTimer(self)
@@ -309,17 +308,21 @@ class AdhaanApp(QMainWindow):
         if self.DebugMode == True:
             self.DebugTime = self.DebugTime + datetime.timedelta(seconds=1)
             timeNow = self.DebugTime
-            
+        
+        #Update clock Widget
         #self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M:%S"))
         self.AllWidgets["CurrentTime"]["Widgets"][0].setText(timeNow.strftime("%H:%M"))
         
+        # Update time left until next prayer
         minsLeft = self.UpdateTilUntilNextPrayer()
          
         # Update prayer time each minute
         minNow = timeNow.strftime("%M")
         if minNow != self.PreviousMin:
+            print("self.PrevMinsLeft", self.PrevMinsLeft, "minsLeft", minsLeft) # HERE TODO NOTE DELETE
             self.OnMinuteChange(minsLeft, self.PreviousMin, minNow)
             self.PreviousMin = minNow
+            self.PrevMinsLeft = minsLeft
 
          
     def OnMinuteChange(self, minsLeft: int, prevMin = 0 , currentMin = 0 ):
@@ -331,7 +334,7 @@ class AdhaanApp(QMainWindow):
             currentMin (int): min that it is now also for logging
         """
         
-        logger.debug("Minutes changed from %s to %s", prevMin, currentMin)
+        logger.debug("MINITE CHANGE TRIGGERED: Minutes changed from %s to %s", prevMin, currentMin)
         
         if not self.ReminderPlayed and minsLeft <= 15:
             logger.info("Playing reminder sound")
@@ -339,15 +342,16 @@ class AdhaanApp(QMainWindow):
             self.ReminderPlayed = True
         
         #Trigger on prayer chagnge
-        #if smn smn
-            #self.OnPrayerTimeChange()
-       
+        if minsLeft > self.PrevMinsLeft:
+            self.OnPrayerTimeChange()
+            self.AdthaanSound.play()
         
-    
+       
     def OnPrayerTimeChange(self):
         """
         Set of events and triggers that should occur on prayer time change
         """        
+        logger.info("Prayer time changed: Playing Adthaan sound")
         self.ReminderPlayed = False
         self.AdthaanPlayed = False
 
@@ -356,7 +360,6 @@ class AdhaanApp(QMainWindow):
         Updates the QLabel with the current time.
         Returns the time left until the next prayer in minutes
         """
-        # TODO add check for change of prayer time
         
         timeNow = datetime.datetime.now()
         if self.DebugMode == True:
@@ -366,20 +369,26 @@ class AdhaanApp(QMainWindow):
         timeFound = False
         for prayer in self.PrayerTimes.values():
             prayerDatetime = datetime.datetime.strptime(timeNow.strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
-            if timeNow <= prayerDatetime:
-                timeTilNext = prayerDatetime - timeNow + datetime.timedelta(seconds=60)
-                formattedTimeTilNext = str(timeTilNext).split(":")
-                prevTimeUntil = self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].text() # FOR DEBUG LOG
-                newTimeUntilNext = "Time until {}: {}h {}m {}s".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1],formattedTimeTilNext[2][:2])
-                #newTimeUntilNext = "Time until {}: {}h {}m".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1])
-                self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].setText(newTimeUntilNext)
+            if timeNow < prayerDatetime:
+                #timeTilNext = prayerDatetime - timeNow + datetime.timedelta(seconds=60)
+                # distance between now and this prayer
+                timeTilNext = prayerDatetime - timeNow
+                
+                # FOR DEBUG LOG
                 timeFound = True
+                prevTimeUntil = self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].text() 
+                
+                #Format delta time into hours, minutes and seconds
+                formattedTimeTilNext = str(timeTilNext).split(":")
+                newTimeUntilNext = "Time until {}: {}h {}m {}s".format(prayer["name"],formattedTimeTilNext[0], formattedTimeTilNext[1],formattedTimeTilNext[2][:2])
+                self.AllWidgets["TimeUntilNextPrayer"]["Widgets"][0].setText(newTimeUntilNext)
                 break
+            
         #Swap to next days prayer times, or do that automatically after 12
         if not timeFound:
             print("WE ARE OUT OF PRAYER TIMES FOR TODAY, HANDLE THIS")
             
-        logger.debug("TimeUntilNextPrayer changed from %s to %s", prevTimeUntil, newTimeUntilNext)
+        logger.debug("UpdateTilUntilNextPrayer: TimeUntilNextPrayer changed from %s to %s", prevTimeUntil, newTimeUntilNext)
         return int(timeTilNext.seconds / 60)
         
     def GetPrayerTimes(self):

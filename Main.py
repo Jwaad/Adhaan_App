@@ -118,19 +118,24 @@ class AdhaanApp(QMainWindow):
         widget.setLayout(self.layout)
         
         # Get initial prayer times
+        self.DayOffset = 0
+        self.IgnoreThirds = True
         self.PrayerNames = ["Fujr", "Dhuhr", "Asr", "Maghrib", "Isha"]
         self.PrayerAPIs = {"LondonCentralMosque":{"api":"http://www.londonprayertimes.com/api/times/","key": "17522509-896f-49b7-80c8-975c4be643b4"},
                            "MuslimWorldLeague":{"api":"TODO","key": "TODO"},
                            "AlAdhan":{"api":"https://api.aladhan.com/v1","key": ""},
                            }
 
-        # TEMP TODO
-        self.KenyaMode = False # TEMP TODO  # Muslim World League (MWL)    Fajr: 18.0° -Isha'a: 17.0°    Asr Juristic Method: Standard (Shafi, Maliki, Hanbali)
-        if self.KenyaMode:
-            self.GetPrayerTimes("AlAdhan",country="Kenya", city="Nairobi", timezonePhP="Africa/Nairobi")
-        else:
-            self.GetPrayerTimes("LondonCentralMosque")
-            
+        #self.PrayerTimes = self.GetPrayerTimes("MuslimWorldLeague", country="Kenya", city="Nairobi", timezonePhP="Africa/Nairobi") # KENYA TIMES
+        yesterdayPrayerTimes = self.GetPrayerTimes("LondonCentralMosque", dayOffset=-1)
+        todayPrayerTimes = self.GetPrayerTimes("LondonCentralMosque")
+        
+        self.PrayerTimes = todayPrayerTimes
+        # if we are not past the last prayer time of the previous day, show previous days prayer times
+        if not self.CheckPastMidnightOrLastThird(yesterdayPrayerTimes, lastThird = not self.IgnoreThirds):
+            self.PrayerTimes = yesterdayPrayerTimes
+            self.DayOffset = 1
+        
         # Populate default buttons
         self.MainPageButtons()
         

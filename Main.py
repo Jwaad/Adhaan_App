@@ -82,7 +82,8 @@ class AdhaanApp(QMainWindow):
         self.setWindowIcon(QIcon(iconPath))
         
         self.setWindowOpacity(1)
-        self.SetDefaultStyleSheet()    
+        self.SetDefaultStyleSheet() 
+        self.setWindowFlags(Qt.WindowStaysOnTopHint) # Qt.Window | Qt.CustomizeWindowHint | 
         
         # Load audio into memory, MAKES THE APP LAG on start, MAYBE I THREAD THIS?
         self.AdthaanSound = QSound(mediaPath + "Adthaan_1.wav")  # Load the sound file
@@ -114,7 +115,6 @@ class AdhaanApp(QMainWindow):
         self.layout.setContentsMargins(5, 5, 5, 5)  # Set margins to 0
         self.layout.setSpacing(0)
         widget.setLayout(self.layout)
-        
         # Get initial prayer times
         self.DefaultAPI = "http://www.londonprayertimes.com/api/times/"
         self.APIKey = "17522509-896f-49b7-80c8-975c4be643b4"
@@ -129,15 +129,22 @@ class AdhaanApp(QMainWindow):
         self.CurrentPrayerTime = None
         self.PrevMinsLeft = self.UpdateTilUntilNextPrayer() #+ 1
         self.OnSecondChange()
+        
+        # Timer that triggers after resize
+        self.ResizeTimer = QTimer(self)
+        self.ResizeTimer.setSingleShot(True)
+        self.ResizeTimer.timeout.connect(self.FitWindowToContentWidth)
+        self.ResizeDelay = 500
 
         # Timer to update clock every second
         self.SecondTimer = QTimer(self)
         self.SecondTimer.timeout.connect(self.OnSecondChange)
-        self.SecondTimer.start(1000)  # 1000 ms = 1 second
+        self.SecondTimer.start(1000)
         
         # Load Save data
         self.LoadSaveData()
         self.MouseStartPos = None
+
     
     def AlreadyRunningDialogBox(self, icon_path):
         msg = QMessageBox()
@@ -241,36 +248,51 @@ class AdhaanApp(QMainWindow):
             self.FitWindowToContentWidth()
     
     def FitWindowToContentWidth(self):
-        #print("fitting width to content")
+        print("fiting content to width")
+        # Get width of each rows content
+        rowWidths = self.GetContentWidthByRow()
+        # Get the largest width
+        max_width = max(rowWidths.values(), default=0)
+        self.setMinimumWidth(0)
+        self.resize(max_width, self.height())  # Resize width to content, but keep current height
+    
+    def GetContentWidthByRow(self):
         # Dictionary to keep track of the total width of each row
         row_widths = {}
-
+        leftMargin, _, rightMargin, _ = self.layout.getContentsMargins()
+        print(self.layout.spacing(), leftMargin, rightMargin)
+        
         # Loop through all items in the layout
         for i in range(self.layout.count()):
             # Get the widget in this layout item
             item = self.layout.itemAt(i)
-
             # If it's a widget (and not a spacer or stretch)
             if item and item.widget():
                 widget = item.widget()
-
                 # Get the row and column position of the item
                 row= self.layout.getItemPosition(i)[0]
-
-                # Add the widget's width to the total width of its row
                 widget_width = widget.sizeHint().width()
-                #print("Content in row {}, ind {} is {} / {}".format(row, i, widget.minimumSizeHint().width(), widget.sizeHint().width()))
+                """
+                if widget.__class__.__name__ == 'QLabel':
+                    # Get font metrics for the label's font
+                    font_metrics = QFontMetrics(widget.font())
 
-                # add to correct row total width
+                    # Get the width and height of the text
+                    #text_width = font_metrics.horizontalAdvance(widget.text())
+                    text_rect = font_metrics.boundingRect(widget.text())
+                    text_width = text_rect.width()
+
+                    widget_width = text_width#widget.sizeHint().width()   #.geometry().width()
+                    
+                elif widget.__class__.__name__ == "QFrame":
+                    # Add the widget's width to the total width of its row
+                    widget_width = widget.sizeHint().width()
+                """
+                    #print("Content in row {}, ind {} is {} / {}".format(row, i, widget.minimumSizeHint().width(), widget.sizeHint().width()))
                 if row not in row_widths:
-                    row_widths[row] = 0
+                    row_widths[row] = leftMargin + rightMargin
                 row_widths[row] += widget_width  # Sum up widths for this row
-        
-        # Get the maximum width of any row
-        max_width = max(row_widths.values(), default=0)
-        self.setMinimumWidth(0)
-        self.resize(max_width, self.height())  # Resize width to content, but keep current height
-        
+        return row_widths
         
     def SaveUserData(self):
         self.SaveData["window_pos"] = [self.pos().x(), self.pos().y()]
@@ -351,8 +373,6 @@ class AdhaanApp(QMainWindow):
         #Trigger on prayer chagnge
         if minsLeft > self.PrevMinsLeft:
             self.OnPrayerTimeChange()
-            
-        
        
     def OnPrayerTimeChange(self):
         """
@@ -591,6 +611,7 @@ class AdhaanApp(QMainWindow):
     def resizeEvent(self, event):
             new_size = event.size()
             stepSize = 10
+            
             if abs(self.WinHeightAtPreviousResize - new_size.height()) < stepSize:
                 return
             
@@ -599,12 +620,17 @@ class AdhaanApp(QMainWindow):
             
             # Update font sizes of each widget if applicable
             for key in self.AllWidgets.keys():
-                
+
                 for widget in self.AllWidgets[key]["Widgets"]:
                     if widget.__class__.__name__ == 'QLabel':
                         widget.setFont(QFont(self.AllWidgets[key]["Font"], int(round(self.AllWidgets[key]["FontSize"] * self.TextScalar, 0))))
             
-            self.WinHeightAtPreviousResize = new_size.height() 
+            self.WinHeightAtPreviousResize = new_size.height()
+            #width = max(self.GetContentWidthByRow().values())
+
+            #self.ResizeTimer.start(self.ResizeDelay)
+            self.updateGeometry()
+            super().resizeEvent(event)
 
 if __name__ == '__main__':
     

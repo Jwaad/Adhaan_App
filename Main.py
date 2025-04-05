@@ -524,7 +524,7 @@ class AdhaanApp(QMainWindow):
                     break
         return todaysPrayerTimes, tommorowsPrayerTimes
     
-    def GetPrayerTimes(self, chosenAPI, country = "GB", city = "London", timezonePhP = "Europe/London"):
+    def GetPrayerTimes(self, chosenAPI, country = "GB", city = "London", timezonePhP = "Europe/London", dayOffset = 0):
         """Depending on the params, use the specified API, in the specified location, to ret prayer times and other useful info
 
         Args:
@@ -532,12 +532,13 @@ class AdhaanApp(QMainWindow):
             country (str, optional): name of desiried country. Defaults to "GB".
             city (str, optional): name of desiried city. Defaults to "London".
             timezonePhP (str, optional): PhP format timezone of the desired city. Defaults to "Europe/London".
+            dayOffset (int, optional): Allows user to get prayer times of a day in past or future, -1 -> yesterday, 1 -> tomorrow. Defaults to 0.
         """
         
         # Get current time. year, month and day, plus tomorrows date for fujr
-        timeNow = datetime.datetime.now()
+        timeNow = datetime.datetime.now() + datetime.timedelta(days=dayOffset)
         if self.DebugMode == True:
-            timeNow = self.DebugTime
+            timeNow = self.DebugTime  + datetime.timedelta(days=dayOffset)
             
         # Get prayer times from our chosen API
         todaysPrayerTimes, tommorowsPrayerTimes = self.GetPrayerTimesFromAPI(chosenAPI, timeNow, country = country, city = city, timezonePhP = timezonePhP)
@@ -559,7 +560,7 @@ class AdhaanApp(QMainWindow):
         lastThird = (datetimeMaghrib +  ((maghribToFujr / 3) * 2))
         
         #store prayer times in dict
-        self.PrayerTimes = {"Fujr":{"name":"Fujr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["fujr"]), "font_size": self.DefaultFontSize},
+        prayerTimes = {"Fujr":{"name":"Fujr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["fujr"]), "font_size": self.DefaultFontSize},
                             "Sunrise":{"name":"Sunrise", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["sunrise"]), "font_size": self.DefaultFontSize},
                             "Dhuhr":{"name":"Dhuhr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["dhuhr"]), "font_size": self.DefaultFontSize},
                             "Asr":{"name":"Asr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["asr"]),"font_size": self.DefaultFontSize},
@@ -568,6 +569,8 @@ class AdhaanApp(QMainWindow):
                             "FirstThird":{"name":"FirstThird", "time":firstThird,"font_size": self.DefaultFontSize},
                             "Midnight":{"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize},
                             "LastThird":{"name":"LastThird", "time":lastThird,"font_size": self.DefaultFontSize}}
+
+        return prayerTimes
         #for time in self.PrayerTimes.values():
         #    print(asd)
         

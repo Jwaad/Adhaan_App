@@ -1,42 +1,4 @@
 # Written by Jwaad Hussain 2025
-#
-#   HIGH PRIOIRTY----------------------
-#   Add pop up to refuse to open when already running
-#   prayer time popups
-#   Create my own title bar
-#   Next day after midnight (On next day, add small +1 icon next to date, until 12am)
-#   Setting page, multiple customisations Settings button OPTIONS MENU FOR CUSTOMISATION
-#       - select themes
-#       - have thirds in tooltip, or in line with widgets
-#       - Volume of adthaan
-#       - Volume of reminder 
-#       - minimize to tray tick box
-#       - change prayer time api
-#       - include thirds in the countdown. i.e. should app says "?m ?h ?s until ?third"
-#       - back to home
-#       - set transparency
-#
-#   LOW PRIORITY-----------------------
-#   Experiment with style: colours and bolding
-#   DOWNLOAD WHOLE REST OF MONTH TO MEMORY
-#   OTHER PRAYER CALCS (specifically kenya calc)
-#   pin to top
-#   Tray info, mins remaing / colour for urgency
-#   have alternative options, for displaying thirds, in line, or in tooltip
-#   in very very rare cases seconds can get skipped -> timer not synced with system time.
-#
-#   Known Bugs--------------------------
-#   strange horizontal minimizing behaviour Seems to be a windows thing, cant corner drag, horizontal length stuck to len at drag
-#   With multiple monitors, might start on a screen that no longer exists. I.E. starts off screen.add()
-#   Windows + arrow key makes UI black. Not sure why, maybe due to resizing code? (happened once and not again)
-#   Dist version doesn't run in tray (Solved itself)
-#   increase amount of cols, to make ? icon smaller. Or change it's horizontal resizing policy (only happens when UI small)
-#
-#   Known Issues------------------------
-#   Quitting from system tray, doesnt cause app to open into system tray next start
-#   Loading audio causes app to start slowly
-
-
 # BUILD COMMAND: 
 # pyinstaller .\Main.py --clean --i=./AdthaanAppIcons/icon.ico --windowed --add-data="./AdthaanAppIcons/*;AdthaanAppIcons/."  --add-data="./AdthaanAppMedia/*;AdthaanAppMedia/."
 # ICON TO ICO: https://icoconvert.com/

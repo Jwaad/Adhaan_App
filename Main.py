@@ -1,7 +1,7 @@
 # Written by Jwaad Hussain 2025
+# ICON TO ICO: https://icoconvert.com/
 # BUILD COMMAND: 
 # pyinstaller .\Main.py --clean --i=./AdthaanAppIcons/icon.ico --windowed --add-data="./AdthaanAppIcons/*;AdthaanAppIcons/."  --add-data="./AdthaanAppMedia/*;AdthaanAppMedia/."
-# ICON TO ICO: https://icoconvert.com/
 
 import sys
 import traceback
@@ -125,14 +125,13 @@ class AdhaanApp(QMainWindow):
                            }
 
         # TEMP TODO
-        self.KenyaMode = True # TEMP TODO  # Muslim World League (MWL)    Fajr: 18.0° -Isha'a: 17.0°    Asr Juristic Method: Standard (Shafi, Maliki, Hanbali)
+        self.KenyaMode = False # TEMP TODO  # Muslim World League (MWL)    Fajr: 18.0° -Isha'a: 17.0°    Asr Juristic Method: Standard (Shafi, Maliki, Hanbali)
         if self.KenyaMode:
             self.GetPrayerTimes("AlAdhan",country="Kenya", city="Nairobi", timezonePhP="Africa/Nairobi")
         else:
             self.GetPrayerTimes("LondonCentralMosque")
             
         # Populate default buttons
-        #time.sleep(3) # Sleep before loading UI, to let above load and calculate facelessly
         self.MainPageButtons()
         
         # Initial time update

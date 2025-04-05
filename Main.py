@@ -403,8 +403,23 @@ class AdhaanApp(QMainWindow):
         #All other prayers
         logger.info("Playing Regular Adthaan Sound")
         self.AdthaanSound.play()
+    
+    def CheckPastMidnightOrLastThird(self, prayerTimes, lastThird = False): 
+        """
+        Check if the current time is past midnight, if lastThird is True, also checks if the current time is in the last third of the night
+        """
+        timeNow = datetime.datetime.now()
+        if self.DebugMode == True:
+            timeNow = self.DebugTime
         
-
+        timeGoal = prayerTimes["Midnight"]["time"]
+        if lastThird:
+            timeGoal = prayerTimes["LastThird"]["time"]
+        
+        print(timeNow, timeGoal, timeNow > timeGoal)
+        return timeNow > timeGoal
+        
+       
     def UpdateTilUntilNextPrayer(self) -> int:
         """
         Updates the QLabel with the current time.
@@ -422,7 +437,7 @@ class AdhaanApp(QMainWindow):
             #datetime.datetime.strptime(timeNow.strftime("%Y-%m-%d") + prayer["time"], "%Y-%m-%d%H:%M")
             
             # Ignore first and last thirds
-            if prayer["name"] == "FirstThird" or prayer["name"] == "LastThird":
+            if self.IgnoreThirds and (prayer["name"] == "FirstThird" or prayer["name"] == "LastThird"):
                 continue
             
             if timeNow < prayerDatetime:

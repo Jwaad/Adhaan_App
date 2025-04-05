@@ -297,7 +297,7 @@ class AdhaanApp(QMainWindow):
                     # Add the widget's width to the total width of its row
                     widget_width = widget.sizeHint().width()
                 """
-                    #print("Content in row {}, ind {} is {} / {}".format(row, i, widget.minimumSizeHint().width(), widget.sizeHint().width()))
+                #print("Content in row {}, ind {} is {} / {}".format(row, i, widget.minimumSizeHint().width(), widget.sizeHint().width()))
                 if row not in row_widths:
                     row_widths[row] = leftMargin + rightMargin
                 row_widths[row] += widget_width  # Sum up widths for this row
@@ -491,20 +491,15 @@ class AdhaanApp(QMainWindow):
         
         # Handle Muslim world league api
         if chosenAPI == "MuslimWorldLeague":
-            response = requests.get("https://muslimworldleague.com/api/times/?format=json&24hours=true&year={}&month={}".format(year, month)).json()
-            todaysPrayerTimes = apiResponse["times"][timeNow.strftime("%Y-%m-%d")]
-            tommorowsPrayerTimes = apiResponse["times"][tomorrow.strftime("%Y-%m-%d")]
+            todaysPrayerTimes= requests.get(f"https://api.aladhan.com/v1/timingsByCity/{day}-{month}-{year}?city={city}&country={country}&method=3&timezonestring={timezonePhP}&calendarMethod=UAQ").json()
+            tommorowsPrayerTimes = requests.get(f"https://api.aladhan.com/v1/timingsByCity/{tomorrow}-{month}-{year}?city={city}&country={country}&method=3&timezonestring={timezonePhP}&calendarMethod=UAQ").json()
+            todaysPrayerTimes = todaysPrayerTimes["data"]["timings"]
+            tommorowsPrayerTimes = tommorowsPrayerTimes["data"]["timings"]
         # Handle london prayer times api
         elif chosenAPI == "LondonPrayerTimes":
             response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year, month, apiKey)).json()
             todaysPrayerTimes = apiResponse["times"][timeNow.strftime("%Y-%m-%d")]
             tommorowsPrayerTimes = apiResponse["times"][tomorrow.strftime("%Y-%m-%d")]
-        # Handle al adhan api
-        elif chosenAPI == "AlAdhan":
-            todaysPrayerTimes= requests.get(f"https://api.aladhan.com/v1/timingsByCity/{day}-{month}-{year}?city={city}&country={country}&method=3&timezonestring={timezonePhP}&calendarMethod=UAQ").json()
-            tommorowsPrayerTimes = requests.get(f"https://api.aladhan.com/v1/timingsByCity/{tomorrow}-{month}-{year}?city={city}&country={country}&method=3&timezonestring={timezonePhP}&calendarMethod=UAQ").json()
-            todaysPrayerTimes = todaysPrayerTimes["data"]["timings"]
-            tommorowsPrayerTimes = tommorowsPrayerTimes["data"]["timings"]
         else:
             # Default to "LondonPrayerTimes"
             response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year, month, apiKey))
@@ -524,11 +519,9 @@ class AdhaanApp(QMainWindow):
         for correctName, wrongNames in wrongSpellings.items():
             for prayerName in todaysPrayerTimes.keys():
                 if prayerName in wrongNames:
-                    print(prayerName, "corected to", correctName)
                     todaysPrayerTimes[correctName] = todaysPrayerTimes.pop(prayerName)
                     tommorowsPrayerTimes[correctName] = tommorowsPrayerTimes.pop(prayerName)
                     break
-        print(todaysPrayerTimes)
         return todaysPrayerTimes, tommorowsPrayerTimes
     
     def GetPrayerTimes(self, chosenAPI, country = "GB", city = "London", timezonePhP = "Europe/London"):

@@ -689,12 +689,12 @@ class AdhaanApp(QMainWindow):
             # Add tool tip to specific prayer times
             if time["name"] == "Isha":
                 # Calculate first third
-                infoIcon = createToolTip("First third starts at:\n{}".format(self.PrayerTimes["FirstThird"]["time"].strftime("%H:%M")))
+                infoIcon = createLabelWithToolTip("❔", "First third starts at:\n{}".format(self.PrayerTimes["FirstThird"]["time"].strftime("%H:%M")))
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
                 self.AllWidgets["IshaToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
             if time["name"] == "Midnight":
                 # Calculate first third
-                infoIcon = createToolTip("Last third starts at:\n{}".format(self.PrayerTimes["LastThird"]["time"].strftime("%H:%M")))
+                infoIcon = createLabelWithToolTip("❔", "Last third starts at:\n{}".format(self.PrayerTimes["LastThird"]["time"].strftime("%H:%M")))
                 self.layout.addWidget(infoIcon, rows, 6, normalRowSpan, 1)
                 self.AllWidgets["MidnightToolTip"] = {"Widgets": [infoIcon], "Font": self.DefaultFont, "FontSize": self.DefaultFontSize}
 

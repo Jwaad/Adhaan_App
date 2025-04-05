@@ -617,7 +617,7 @@ class AdhaanApp(QMainWindow):
             
         standardSizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Ignored)
         self.TimeWidgets = [
-            #CurrentDate #202A25 #C4EBC8 #8E7C93 #D0A5C0 #F6C0D0
+            #CurrentDate
             {"name":"CurrentDate", "default_text":timeNow.strftime("%d/%m/%Y"), "type":QLabel,
              "alignment":Qt.AlignCenter,"size_policy":standardSizePolicy, "row_span":smallRowSpan,
              "col_span":maxColSpan, "font_size":self.DefaultFontSize},
@@ -633,7 +633,11 @@ class AdhaanApp(QMainWindow):
         # Populate time widgets
         rows = 1
         for widget in self.TimeWidgets:
-            label = widget["type"](widget["default_text"], self)
+            widgetText = widget["default_text"]
+            if widget["name"] == "CurrentDate" and self.DayOffset != 0:
+                widgetText = f'{widget["default_text"]} + {self.DayOffset}'
+                
+            label = widget["type"](widgetText, self)
             label.setFont(QFont(self.DefaultFont, widget["font_size"]))
             label.setSizePolicy(widget["size_policy"])
             if widget["type"] == QLabel:

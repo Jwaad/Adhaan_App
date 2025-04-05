@@ -115,11 +115,14 @@ class AdhaanApp(QMainWindow):
         self.layout.setContentsMargins(5, 5, 5, 5)  # Set margins to 0
         self.layout.setSpacing(0)
         widget.setLayout(self.layout)
+        
         # Get initial prayer times
-        self.DefaultAPI = "http://www.londonprayertimes.com/api/times/"
-        self.APIKey = "17522509-896f-49b7-80c8-975c4be643b4"
         self.PrayerNames = ["Fujr", "Dhuhr", "Asr", "Maghrib", "Isha"]
-        self.GetPrayerTimes()
+        self.PrayerAPIs = {"LondonCentralMosque":{"api":"http://www.londonprayertimes.com/api/times/","key": "17522509-896f-49b7-80c8-975c4be643b4"},
+                           "MuslimWorldLeague":{"api":"TODO","key": "TODO"} }
+        self.DefaultAPI = "LondonCentralMosque"
+        self.KenyaMode = False  # Muslim World League (MWL)    Fajr: 18.0° -Isha'a: 17.0°    Asr Juristic Method: Standard (Shafi, Maliki, Hanbali)
+        self.GetPrayerTimes(self.DefaultAPI)
         
         # Populate default buttons
         #time.sleep(3) # Sleep before loading UI, to let above load and calculate facelessly
@@ -443,31 +446,72 @@ class AdhaanApp(QMainWindow):
             return None
         
         return int(timeTilNext.seconds / 60)
+    
+    def GetPrayerTimesFromAPI(self, chosenAPI, timeNow):
+        """Method to handle all the different API calls that the program supports.
+        Supported APIs: 
+        MuslimWorldLeague
+        LondonPrayerTimes
+
+        Args:
+            chosenAPI (string): string, needs to match self.PrayerAPIs
+            timeNow (datetime time now): date time object of todays date, or of specified datetime
+
+        Returns:
+            list[dict{prayertimename:datetime},dict{prayertimename:datetime}]: returns 2 dicts, one of todays prayer times and one of tomorrows
+        """
+        year = timeNow.strftime("%Y")
+        month = timeNow.strftime("%m")
+        tomorrow =  (timeNow + datetime.timedelta(days=1))
         
-    def GetPrayerTimes(self):
+        # getAPI's key
+        apiKey = self.PrayerAPIs[chosenAPI]["key"]
+        
+        # Handle Muslim world league api
+        if chosenAPI == "MuslimWorldLeague":
+            response = requests.get("https://muslimworldleague.com/api/times/?format=json&24hours=true&year={}&month={}".format(year, month))
+            apiResponse = response.json()
+            todaysPrayerTimes = apiResponse["times"][timeNow.strftime("%Y-%m-%d")]
+            tommorowsPrayerTimes = apiResponse["times"][tomorrow.strftime("%Y-%m-%d")]
+        # Handle london prayer times api
+        elif chosenAPI == "LondonPrayerTimes":
+            response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year, month, apiKey))
+            apiResponse = response.json()
+            todaysPrayerTimes = apiResponse["times"][timeNow.strftime("%Y-%m-%d")]
+            tommorowsPrayerTimes = apiResponse["times"][tomorrow.strftime("%Y-%m-%d")]
+        else:
+            # Default to "LondonPrayerTimes"
+            response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year, month, apiKey))
+            apiResponse = response.json()
+            todaysPrayerTimes = apiResponse["times"][timeNow.strftime("%Y-%m-%d")]
+            tommorowsPrayerTimes = apiResponse["times"][tomorrow.strftime("%Y-%m-%d")]
+            
+        return todaysPrayerTimes, tommorowsPrayerTimes
+    
+    def GetPrayerTimes(self, chosenAPI):
         """
-        Retrieves prayer times from API (currently hardcoded) and populates relevant instance variables. 
+        Retrieves prayer times from chosen API and populates relevant instance variables. 
         """
+        # Get current time. year, month and day, plus tomorrows date for fujr
         timeNow = datetime.datetime.now()
         if self.DebugMode == True:
             timeNow = self.DebugTime
+            
+        # Get prayer times from our chosen API
+        todaysPrayerTimes, tommorowsPrayerTimes = self.GetPrayerTimesFromAPI(chosenAPI, timeNow)
         
-        # Call API and get todays prayer times
+        # Get current year, month and day from timeNow
         year = timeNow.strftime("%Y")
         month = timeNow.strftime("%m")
         day = timeNow.strftime("%d")
-        tomorrow =  (timeNow + datetime.timedelta(days=1))
-        response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year, month, self.APIKey))
-        apiResponse = response.json()
-        todaysPrayerTimes = apiResponse["times"][timeNow.strftime("%Y-%m-%d")]
-        tommorowsPrayerTimes = apiResponse["times"][tomorrow.strftime("%Y-%m-%d")]
-        # print(response.status_code) # TODO handle error codes here
+        tomorrow =  (timeNow + datetime.timedelta(days=1)).strftime("%d")
         
         # Get islamic midnight time -> NOTE: display today's fujr, but calculate midnight using tomorrow's fujr
         datetimeMaghrib = datetime.datetime.strptime(year + "-" + month + "-" + day + todaysPrayerTimes["magrib"], "%Y-%m-%d%H:%M")
-        datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow.strftime("%d") + tommorowsPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
+        datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow + tommorowsPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
         maghribToFujr = ( datetimeFujr - datetimeMaghrib)
-       
+
+        # NOTE, 1 way for midnight is maghrib to fujr, another is maghrib to sunrise
         midnight = (datetimeMaghrib +  (maghribToFujr / 2))
         firstThird = (datetimeMaghrib +  (maghribToFujr / 3))
         lastThird = (datetimeMaghrib +  ((maghribToFujr / 3) * 2))
@@ -482,7 +526,7 @@ class AdhaanApp(QMainWindow):
                             "FirstThird":{"name":"FirstThird", "time":firstThird,"font_size": self.DefaultFontSize},
                             "Midnight":{"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize},
                             "LastThird":{"name":"LastThird", "time":lastThird,"font_size": self.DefaultFontSize}}
-        #for asd in self.PrayerTimes.values():
+        #for time in self.PrayerTimes.values():
         #    print(asd)
         
     def HourMinToDateTime(self, day:str, month:str, year:str, hourMinString:str) -> datetime.datetime:

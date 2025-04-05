@@ -27,9 +27,9 @@ class AdhaanApp(QMainWindow):
         self.app = app
         
         #Debug mode
-        self.DebugMode = False
+        self.DebugMode = True
         self.DebugTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.DebugTime = "2025-03-20 05:59:55"
+        self.DebugTime = "2025-03-20 23:30:55" #"2025-04-05 00:25:00" 
         self.DebugTime = datetime.datetime.strptime(self.DebugTime, "%Y-%m-%d %H:%M:%S")
         self.PreviousMin = (datetime.datetime.now() - datetime.timedelta(minutes=1) ).strftime("%M")
         if self.DebugMode == True:
@@ -88,7 +88,7 @@ class AdhaanApp(QMainWindow):
         
         # Load audio into memory, MAKES THE APP LAG on start, MAYBE I THREAD THIS?
         self.AdthaanSound = QSound(mediaPath + "Adthaan_1.wav")  # Load the sound file
-        self.FujrAdthaanSound = QSound(mediaPath + "Fujr_Adthaan_2.wav")  # Load the sound file
+        self.FujrAdthaanSound = QSound(mediaPath + "Fujr_Adthaan_1.wav")  # Load the sound file
         self.ReminderSound = QSound(mediaPath + "Alert.wav") #Load reminder file
         self.ReminderPlayed = False 
 
@@ -121,6 +121,7 @@ class AdhaanApp(QMainWindow):
         self.DayOffset = 0
         self.IgnoreThirds = True
         self.PrayerNames = ["Fujr", "Dhuhr", "Asr", "Maghrib", "Isha"]
+        #Deprecated
         self.PrayerAPIs = {"LondonCentralMosque":{"api":"http://www.londonprayertimes.com/api/times/","key": "17522509-896f-49b7-80c8-975c4be643b4"},
                            "MuslimWorldLeague":{"api":"TODO","key": "TODO"},
                            "AlAdhan":{"api":"https://api.aladhan.com/v1","key": ""},
@@ -141,7 +142,7 @@ class AdhaanApp(QMainWindow):
         
         # Initial time update
         self.CurrentPrayerTime = None
-        self.PrevMinsLeft = self.UpdateTilUntilNextPrayer() #+ 1
+        self.PrevMinsLeft = self.UpdateTilUntilNextPrayer()
         self.OnSecondChange()
         
         # Timer that triggers after resize
@@ -262,7 +263,7 @@ class AdhaanApp(QMainWindow):
             self.FitWindowToContentWidth()
     
     def FitWindowToContentWidth(self):
-        print("fiting content to width")
+        #print("fiting content to width")
         # Get width of each rows content
         rowWidths = self.GetContentWidthByRow()
         # Get the largest width
@@ -274,7 +275,7 @@ class AdhaanApp(QMainWindow):
         # Dictionary to keep track of the total width of each row
         row_widths = {}
         leftMargin, _, rightMargin, _ = self.layout.getContentsMargins()
-        print(self.layout.spacing(), leftMargin, rightMargin)
+        #print(self.layout.spacing(), leftMargin, rightMargin)
         
         # Loop through all items in the layout
         for i in range(self.layout.count()):
@@ -595,13 +596,12 @@ class AdhaanApp(QMainWindow):
         
     
     def MainPageButtons(self):
-        
         # Add info icon
-        def createToolTip(toolTipText):
+        def createLabelWithToolTip(labelText, toolTipText):
             """
             Creates a tool tip for the info icon.
             """
-            infoIcon = QLabel("❔", self) #
+            infoIcon = QLabel(labelText, self)
             infoIcon.setFont(QFont(self.DefaultFont, self.DefaultFontSize))
             infoIcon.setAlignment(Qt.AlignTop | Qt.AlignLeft )
             infoIcon.setSizePolicy(standardSizePolicy)

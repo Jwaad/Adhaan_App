@@ -4,6 +4,7 @@
 # ICON TO ICO: https://icoconvert.com/
 
 import sys
+import traceback
 import datetime
 from venv import logger
 import requests
@@ -119,11 +120,17 @@ class AdhaanApp(QMainWindow):
         # Get initial prayer times
         self.PrayerNames = ["Fujr", "Dhuhr", "Asr", "Maghrib", "Isha"]
         self.PrayerAPIs = {"LondonCentralMosque":{"api":"http://www.londonprayertimes.com/api/times/","key": "17522509-896f-49b7-80c8-975c4be643b4"},
-                           "MuslimWorldLeague":{"api":"TODO","key": "TODO"} }
-        self.DefaultAPI = "LondonCentralMosque"
-        self.KenyaMode = False  # Muslim World League (MWL)    Fajr: 18.0° -Isha'a: 17.0°    Asr Juristic Method: Standard (Shafi, Maliki, Hanbali)
-        self.GetPrayerTimes(self.DefaultAPI)
-        
+                           "MuslimWorldLeague":{"api":"TODO","key": "TODO"},
+                           "AlAdhan":{"api":"https://api.aladhan.com/v1","key": ""},
+                           }
+
+        # TEMP TODO
+        self.KenyaMode = True # TEMP TODO  # Muslim World League (MWL)    Fajr: 18.0° -Isha'a: 17.0°    Asr Juristic Method: Standard (Shafi, Maliki, Hanbali)
+        if self.KenyaMode:
+            self.GetPrayerTimes("AlAdhan",country="Kenya", city="Nairobi", timezonePhP="Africa/Nairobi")
+        else:
+            self.GetPrayerTimes("LondonCentralMosque")
+            
         # Populate default buttons
         #time.sleep(3) # Sleep before loading UI, to let above load and calculate facelessly
         self.MainPageButtons()
@@ -447,7 +454,7 @@ class AdhaanApp(QMainWindow):
         
         return int(timeTilNext.seconds / 60)
     
-    def GetPrayerTimesFromAPI(self, chosenAPI, timeNow):
+    def GetPrayerTimesFromAPI(self, chosenAPI, timeNow, country = "GB", city = "London", timezonePhP = "Europe/London"):
         """Method to handle all the different API calls that the program supports.
         Supported APIs: 
         MuslimWorldLeague
@@ -462,6 +469,7 @@ class AdhaanApp(QMainWindow):
         """
         year = timeNow.strftime("%Y")
         month = timeNow.strftime("%m")
+        day = timeNow.strftime("%d")
         tomorrow =  (timeNow + datetime.timedelta(days=1))
         
         # getAPI's key
@@ -469,36 +477,63 @@ class AdhaanApp(QMainWindow):
         
         # Handle Muslim world league api
         if chosenAPI == "MuslimWorldLeague":
-            response = requests.get("https://muslimworldleague.com/api/times/?format=json&24hours=true&year={}&month={}".format(year, month))
-            apiResponse = response.json()
+            response = requests.get("https://muslimworldleague.com/api/times/?format=json&24hours=true&year={}&month={}".format(year, month)).json()
             todaysPrayerTimes = apiResponse["times"][timeNow.strftime("%Y-%m-%d")]
             tommorowsPrayerTimes = apiResponse["times"][tomorrow.strftime("%Y-%m-%d")]
         # Handle london prayer times api
         elif chosenAPI == "LondonPrayerTimes":
-            response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year, month, apiKey))
-            apiResponse = response.json()
+            response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year, month, apiKey)).json()
             todaysPrayerTimes = apiResponse["times"][timeNow.strftime("%Y-%m-%d")]
             tommorowsPrayerTimes = apiResponse["times"][tomorrow.strftime("%Y-%m-%d")]
+        # Handle al adhan api
+        elif chosenAPI == "AlAdhan":
+            todaysPrayerTimes= requests.get(f"https://api.aladhan.com/v1/timingsByCity/{day}-{month}-{year}?city={city}&country={country}&method=3&timezonestring={timezonePhP}&calendarMethod=UAQ").json()
+            tommorowsPrayerTimes = requests.get(f"https://api.aladhan.com/v1/timingsByCity/{tomorrow}-{month}-{year}?city={city}&country={country}&method=3&timezonestring={timezonePhP}&calendarMethod=UAQ").json()
+            todaysPrayerTimes = todaysPrayerTimes["data"]["timings"]
+            tommorowsPrayerTimes = tommorowsPrayerTimes["data"]["timings"]
         else:
             # Default to "LondonPrayerTimes"
             response = requests.get("http://www.londonprayertimes.com/api/times/?format=json&24hours=true&year={}&month={}&key={}".format(year, month, apiKey))
             apiResponse = response.json()
             todaysPrayerTimes = apiResponse["times"][timeNow.strftime("%Y-%m-%d")]
             tommorowsPrayerTimes = apiResponse["times"][tomorrow.strftime("%Y-%m-%d")]
-            
+        
+        # Correct = fujr, sunrise, dhuhr, asr, maghrib, isha
+        wrongSpellings = {"fujr":["Fujr", "Fajr", "fajr"],
+                          "sunrise":["Sunrise", "sun-rise", "sun rise", "sun_rise"],
+                          "dhuhr":["Dhuhr", "duhr","Duhr", "dohr", "Dohr"],
+                          "asr":["Asr", "ahsr", "Ahsr"],
+                          "maghrib":["Maghrib", "magrib", "Magrib"],
+                          "isha":["Isha"]}
+        
+        # correct API formatting
+        for correctName, wrongNames in wrongSpellings.items():
+            for prayerName in todaysPrayerTimes.keys():
+                if prayerName in wrongNames:
+                    print(prayerName, "corected to", correctName)
+                    todaysPrayerTimes[correctName] = todaysPrayerTimes.pop(prayerName)
+                    tommorowsPrayerTimes[correctName] = tommorowsPrayerTimes.pop(prayerName)
+                    break
+        print(todaysPrayerTimes)
         return todaysPrayerTimes, tommorowsPrayerTimes
     
-    def GetPrayerTimes(self, chosenAPI):
+    def GetPrayerTimes(self, chosenAPI, country = "GB", city = "London", timezonePhP = "Europe/London"):
+        """Depending on the params, use the specified API, in the specified location, to ret prayer times and other useful info
+
+        Args:
+            chosenAPI (str): Should match one of the supported PrayerAPIs from self.PrayerAPIs
+            country (str, optional): name of desiried country. Defaults to "GB".
+            city (str, optional): name of desiried city. Defaults to "London".
+            timezonePhP (str, optional): PhP format timezone of the desired city. Defaults to "Europe/London".
         """
-        Retrieves prayer times from chosen API and populates relevant instance variables. 
-        """
+        
         # Get current time. year, month and day, plus tomorrows date for fujr
         timeNow = datetime.datetime.now()
         if self.DebugMode == True:
             timeNow = self.DebugTime
             
         # Get prayer times from our chosen API
-        todaysPrayerTimes, tommorowsPrayerTimes = self.GetPrayerTimesFromAPI(chosenAPI, timeNow)
+        todaysPrayerTimes, tommorowsPrayerTimes = self.GetPrayerTimesFromAPI(chosenAPI, timeNow, country = country, city = city, timezonePhP = timezonePhP)
         
         # Get current year, month and day from timeNow
         year = timeNow.strftime("%Y")
@@ -507,8 +542,8 @@ class AdhaanApp(QMainWindow):
         tomorrow =  (timeNow + datetime.timedelta(days=1)).strftime("%d")
         
         # Get islamic midnight time -> NOTE: display today's fujr, but calculate midnight using tomorrow's fujr
-        datetimeMaghrib = datetime.datetime.strptime(year + "-" + month + "-" + day + todaysPrayerTimes["magrib"], "%Y-%m-%d%H:%M")
-        datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow + tommorowsPrayerTimes["fajr"], "%Y-%m-%d%H:%M")
+        datetimeMaghrib = datetime.datetime.strptime(year + "-" + month + "-" + day + todaysPrayerTimes["maghrib"], "%Y-%m-%d%H:%M")
+        datetimeFujr = datetime.datetime.strptime(year + "-" + month + "-" + tomorrow + tommorowsPrayerTimes["fujr"], "%Y-%m-%d%H:%M")
         maghribToFujr = ( datetimeFujr - datetimeMaghrib)
 
         # NOTE, 1 way for midnight is maghrib to fujr, another is maghrib to sunrise
@@ -517,11 +552,11 @@ class AdhaanApp(QMainWindow):
         lastThird = (datetimeMaghrib +  ((maghribToFujr / 3) * 2))
         
         #store prayer times in dict
-        self.PrayerTimes = {"Fujr":{"name":"Fujr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["fajr"]), "font_size": self.DefaultFontSize},
+        self.PrayerTimes = {"Fujr":{"name":"Fujr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["fujr"]), "font_size": self.DefaultFontSize},
                             "Sunrise":{"name":"Sunrise", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["sunrise"]), "font_size": self.DefaultFontSize},
                             "Dhuhr":{"name":"Dhuhr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["dhuhr"]), "font_size": self.DefaultFontSize},
                             "Asr":{"name":"Asr", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["asr"]),"font_size": self.DefaultFontSize},
-                            "Maghrib":{"name":"Maghrib", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["magrib"]),"font_size": self.DefaultFontSize},
+                            "Maghrib":{"name":"Maghrib", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["maghrib"]),"font_size": self.DefaultFontSize},
                             "Isha":{"name":"Isha", "time":self.HourMinToDateTime(day, month, year, todaysPrayerTimes["isha"]),"font_size": self.DefaultFontSize},
                             "FirstThird":{"name":"FirstThird", "time":firstThird,"font_size": self.DefaultFontSize},
                             "Midnight":{"name":"Midnight", "time":midnight,"font_size": self.DefaultFontSize},
@@ -693,7 +728,12 @@ if __name__ == '__main__':
         adhaanApp.show()
         sys.exit(app.exec_())
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"An error occurred: {e}")
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        print(f"Error type: {exc_type}")
+        print(f"Error value: {exc_value}")
+        print(f"Traceback (most recent call last):")
+        traceback.print_exc()
         sys.exit(1)  # Exit if something else goes wrong
         
     

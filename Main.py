@@ -389,15 +389,15 @@ class AdhaanApp(QMainWindow):
         """        
         logger.info("Prayer Time Changed")
         self.ReminderPlayed = False
-        # If not a prayer dont play adthaan
-        if not self.CurrentPrayerTime in self.PrayerNames:
-            logger.info(f"Not Playing Sound as time of : {self.CurrentPrayerTime}")
-            return
-        
         # For fujr
         if self.CurrentPrayerTime == "Fujr":
             logger.info("Playing Fujr Adthaan Sound")
             self.FujrAdthaanSound.play()
+            return
+        
+        # If not a prayer dont play adthaan
+        if not self.CurrentPrayerTime in self.PrayerNames:
+            logger.info(f"Not Playing Sound as time of : {self.CurrentPrayerTime}")
             return
         
         #All other prayers
